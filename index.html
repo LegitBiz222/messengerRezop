@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rezop Messenger</title>
+    <title>Supabase Messenger</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ВСТАВЬТЕ ВЕСЬ CSS СТИЛЬ ИЗ ПРЕДЫДУЩЕГО КОДА */
         * {
             margin: 0;
             padding: 0;
@@ -48,18 +49,6 @@
             --input-bg: #484c52;
             --border-color: #40444b;
             --hover-color: #3a3d42;
-        }
-
-        .theme-black {
-            --primary-color: #5865F2;
-            --text-color: #ffffff;
-            --bg-color: #0f0f0f;
-            --sidebar-bg: #1a1a1a;
-            --chat-bg: #0f0f0f;
-            --message-bg: #1a1a1a;
-            --input-bg: #1a1a1a;
-            --border-color: #2a2a2a;
-            --hover-color: #2a2a2a;
         }
 
         body {
@@ -571,7 +560,7 @@
     <!-- Экран авторизации -->
     <div class="auth-container" id="authContainer">
         <div class="auth-form">
-            <h2><i class="fas fa-comments"></i> Rezop Messenger</h2>
+            <h2><i class="fas fa-comments"></i> Supabase Messenger</h2>
             <div class="auth-tabs">
                 <div class="auth-tab active" id="loginTab">Вход</div>
                 <div class="auth-tab" id="registerTab">Регистрация</div>
@@ -693,7 +682,7 @@
             <div class="settings-section" style="margin-top: 20px;">
                 <h4>Информация</h4>
                 <p style="font-size: 14px; color: var(--text-color); opacity: 0.8;">
-                    ✅ Реальный мессенджер с Rezop<br>
+                    ✅ Реальный мессенджер с Supabase<br>
                     💬 Сообщения видны всем пользователям<br>
                     🚀 Работает в реальном времени
                 </p>
@@ -709,9 +698,9 @@
     </div>
 
     <script>
-        // Конфигурация Supabase - ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ!
-        const SUPABASE_URL = 'https://yizjvfyloyemelbvpxst.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlpemp2Znlsb3llbWVsYnZweHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTg4ODYsImV4cCI6MjA3NzIzNDg4Nn0.GpUcpeXJCuBFXpFGvTKeIVSi5248KVZSFyMd6NeuJVw';
+        // 🔧 КОНФИГУРАЦИЯ - ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ!
+        const SUPABASE_URL = 'https://yizjvfyloyemelbvpxst-url.supabase.co'; // Ваш Project URL
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlpemp2Znlsb3llbWVsYnZweHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTg4ODYsImV4cCI6MjA3NzIzNDg4Nn0.GpUcpeXJCuBFXpFGvTKeIVSi5248KVZSFyMd6NeuJVw'; // Ваш anon public ключ
 
         // Инициализация Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -764,10 +753,17 @@
                         this.hideSettings();
                     }
                 });
+
+                // Смена темы
+                document.querySelectorAll('.theme-option').forEach(option => {
+                    option.addEventListener('click', () => {
+                        const theme = option.getAttribute('data-theme');
+                        this.setTheme(theme);
+                    });
+                });
             }
 
             async checkAuth() {
-                // Проверяем, есть ли сохраненный пользователь
                 const savedUser = localStorage.getItem('messenger_user');
                 if (savedUser) {
                     this.currentUser = JSON.parse(savedUser);
@@ -804,27 +800,24 @@
                 loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вход...';
 
                 try {
-                    // В реальном приложении здесь была бы аутентификация через Supabase Auth
-                    // Для демо используем простую проверку
-                    const { data: users, error } = await supabase
+                    // Ищем пользователя по email
+                    const { data: user, error } = await supabase
                         .from('users')
                         .select('*')
                         .eq('email', email)
                         .single();
 
-                    if (error || !users) {
+                    if (error || !user) {
                         document.getElementById('loginError').textContent = 'Пользователь не найден';
                         return;
                     }
 
-                    // В реальном приложении пароли должны хэшироваться!
-                    // Это демо-версия для простоты
-                    this.currentUser = users;
+                    this.currentUser = user;
                     localStorage.setItem('messenger_user', JSON.stringify(this.currentUser));
                     await this.showMessenger();
 
                 } catch (error) {
-                    document.getElementById('loginError').textContent = 'Ошибка входа';
+                    document.getElementById('loginError').textContent = 'Ошибка входа: ' + error.message;
                 } finally {
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Войти';
@@ -1056,5 +1049,102 @@
             async setupRealtimeSubscription() {
                 // Подписка на новые сообщения в реальном времени
                 supabase
-                    .channel('messages')
-                    .
+                    .channel('public:messages')
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: 'INSERT',
+                            schema: 'public',
+                            table: 'messages'
+                        },
+                        (payload) => {
+                            // Если новое сообщение в текущем канале, обновляем чат
+                            if (payload.new.channel_id === this.currentChannel?.id) {
+                                this.loadMessages();
+                            }
+                        }
+                    )
+                    .subscribe();
+            }
+
+            formatTime(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            updateConnectionStatus(text, statusClass) {
+                const statusElement = document.getElementById('connectionStatus');
+                const statusText = document.getElementById('statusText');
+                
+                statusText.textContent = text;
+                statusElement.className = `connection-status ${statusClass}`;
+            }
+
+            loadTheme() {
+                const savedTheme = localStorage.getItem('messenger_theme') || 'dark';
+                this.setTheme(savedTheme);
+            }
+
+            setTheme(theme) {
+                document.body.className = `theme-${theme}`;
+                localStorage.setItem('messenger_theme', theme);
+                
+                document.querySelectorAll('.theme-option').forEach(option => {
+                    if (option.getAttribute('data-theme') === theme) {
+                        option.classList.add('active');
+                    } else {
+                        option.classList.remove('active');
+                    }
+                });
+            }
+
+            initEmojiPicker() {
+                const emojiPicker = document.getElementById('emojiPicker');
+                EMOJIS.forEach(emoji => {
+                    const emojiElement = document.createElement('span');
+                    emojiElement.className = 'emoji';
+                    emojiElement.textContent = emoji;
+                    emojiElement.addEventListener('click', () => {
+                        document.getElementById('messageInput').value += emoji;
+                        document.getElementById('messageInput').focus();
+                    });
+                    emojiPicker.appendChild(emojiElement);
+                });
+            }
+
+            toggleEmojiPicker() {
+                const emojiPicker = document.getElementById('emojiPicker');
+                emojiPicker.style.display = emojiPicker.style.display === 'flex' ? 'none' : 'flex';
+            }
+
+            showSettings() {
+                document.getElementById('settingsModal').style.display = 'flex';
+            }
+
+            hideSettings() {
+                document.getElementById('settingsModal').style.display = 'none';
+            }
+
+            logout() {
+                localStorage.removeItem('messenger_user');
+                this.currentUser = null;
+                this.showAuth();
+                this.hideSettings();
+            }
+        }
+
+        // Инициализация мессенджера при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            new SupabaseMessenger();
+        });
+
+        // Закрытие emoji picker при клике вне
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('emojiBtn').contains(e.target) && 
+                !document.getElementById('emojiPicker').contains(e.target)) {
+                document.getElementById('emojiPicker').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
