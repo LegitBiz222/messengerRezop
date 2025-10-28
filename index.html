@@ -3,299 +3,604 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord-подобный мессенджер</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>MelodyStream - Ваша музыкальная вселенная</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --background-primary: #36393f;
-            --background-secondary: #2f3136;
-            --background-tertiary: #202225;
-            --text-normal: #dcddde;
-            --text-muted: #72767d;
-            --brand: #5865f2;
-            --brand-hover: #4752c4;
-            --online: #3ba55c;
-            --idle: #faa81a;
-            --dnd: #ed4245;
+            --primary: #1db954;
+            --primary-dark: #1aa34a;
+            --background: #121212;
+            --card-bg: #181818;
+            --card-hover: #282828;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --sidebar-width: 240px;
+            --player-height: 90px;
+            --header-height: 64px;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: var(--background-primary);
-            color: var(--text-normal);
+            background-color: var(--background);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Layout */
+        .app-container {
             display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: #000000;
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100%;
+            z-index: 10;
+        }
+
+        .logo {
+            padding: 0 24px 18px;
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo i {
+            color: var(--primary);
+            margin-right: 10px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-item {
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-primary);
+        }
+
+        .nav-item i {
+            margin-right: 16px;
+            font-size: 20px;
+        }
+
+        .nav-item.active i {
+            color: var(--primary);
+        }
+
+        .playlists {
+            padding: 0 24px;
+            margin-top: 24px;
+            border-top: 1px solid #282828;
+            padding-top: 16px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .playlist-item {
+            color: var(--text-secondary);
+            padding: 8px 0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .playlist-item:hover {
+            color: var(--text-primary);
+        }
+
+        .create-playlist {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px 0;
+        }
+
+        .create-playlist i {
+            background-color: var(--text-secondary);
+            color: #000;
+            width: 24px;
+            height: 24px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            font-size: 14px;
+        }
+
+        .create-playlist:hover {
+            color: var(--text-primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* Боковая панель серверов */
-        .servers-sidebar {
-            width: 72px;
-            background-color: var(--background-tertiary);
+        /* Header */
+        .header {
+            height: var(--header-height);
+            background-color: rgba(18, 18, 18, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 0 32px;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            padding: 12px 0;
-            overflow-y: auto;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 5;
         }
 
-        .server-icon {
-            width: 48px;
-            height: 48px;
+        .navigation-buttons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .nav-button {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background-color: var(--background-secondary);
-            margin-bottom: 8px;
+            background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: border-radius 0.2s, background-color 0.2s;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 364px;
+            margin: 0 24px;
             position: relative;
         }
 
-        .server-icon:hover {
-            border-radius: 16px;
-            background-color: var(--brand);
+        .search-bar input {
+            width: 100%;
+            height: 40px;
+            border-radius: 20px;
+            border: none;
+            background-color: #2a2a2a;
+            padding: 0 40px 0 16px;
+            color: var(--text-primary);
+            font-size: 14px;
         }
 
-        .server-icon.active {
-            border-radius: 16px;
-            background-color: var(--brand);
+        .search-bar i {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
         }
 
-        .server-icon.add-server {
-            background-color: var(--background-secondary);
-            color: var(--online);
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .upgrade-button {
+            background-color: transparent;
+            border: 1px solid var(--text-secondary);
+            color: var(--text-primary);
+            padding: 8px 32px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upgrade-button:hover {
+            border-color: var(--text-primary);
+            transform: scale(1.04);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            background-color: #000;
+            border-radius: 23px;
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-name {
+            margin: 0 8px 0 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-profile i {
+            margin-right: 6px;
+            color: var(--text-secondary);
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 24px 32px;
+            overflow-y: auto;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
             font-size: 24px;
+            font-weight: 700;
         }
 
-        .server-icon.add-server:hover {
-            background-color: var(--online);
-            color: white;
+        .see-all {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
-        .server-icon img {
+        .see-all:hover {
+            text-decoration: underline;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 6px;
+            padding: 16px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card:hover {
+            background-color: var(--card-hover);
+        }
+
+        .card-image {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image img {
             width: 100%;
             height: 100%;
-            border-radius: inherit;
             object-fit: cover;
         }
 
-        /* Панель каналов */
-        .channels-sidebar {
-            width: 240px;
-            background-color: var(--background-secondary);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .server-header {
-            padding: 16px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .channels-list {
-            padding: 8px;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-
-        .channel-category {
-            margin-top: 16px;
-        }
-
-        .category-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 4px 8px;
-            color: var(--text-muted);
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .channel {
-            padding: 6px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            color: var(--text-muted);
-        }
-
-        .channel:hover {
-            background-color: rgba(79, 84, 92, 0.32);
-            color: var(--text-normal);
-        }
-
-        .channel.active {
-            background-color: rgba(79, 84, 92, 0.4);
-            color: var(--text-normal);
-        }
-
-        .channel-icon {
-            margin-right: 6px;
-        }
-
-        /* Основная область чата */
-        .chat-area {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--background-primary);
-        }
-
-        .chat-header {
-            padding: 16px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-            display: flex;
-            align-items: center;
-        }
-
-        .chat-header-icon {
-            margin-right: 8px;
-            color: var(--text-muted);
-        }
-
-        .chat-messages {
-            flex-grow: 1;
-            padding: 16px;
-            overflow-y: auto;
-        }
-
-        .message {
-            display: flex;
-            margin-bottom: 16px;
-            padding: 4px 16px;
-        }
-
-        .message:hover {
-            background-color: rgba(4, 4, 5, 0.07);
-        }
-
-        .message-avatar {
+        .play-button {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            margin-right: 16px;
-            cursor: pointer;
-        }
-
-        .message-content {
-            flex-grow: 1;
-        }
-
-        .message-header {
+            background-color: var(--primary);
             display: flex;
             align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .card:hover .play-button {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card-title {
+            font-weight: 700;
             margin-bottom: 4px;
+            font-size: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .message-author {
-            font-weight: 500;
-            margin-right: 8px;
-            cursor: pointer;
-        }
-
-        .message-timestamp {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .message-text {
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 14px;
             line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        .chat-input-container {
-            padding: 16px;
+        /* Charts Section */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 40px;
         }
 
-        .chat-input {
-            width: 100%;
-            background-color: var(--background-tertiary);
-            border: none;
+        .chart-card {
+            background: linear-gradient(149.46deg, #450af5, #8e8ee5 99.16%);
             border-radius: 8px;
-            padding: 12px;
-            color: var(--text-normal);
-            resize: none;
-            outline: none;
+            padding: 20px;
+            display: flex;
+            align-items: center;
         }
 
-        /* Панель участников */
-        .members-sidebar {
-            width: 240px;
-            background-color: var(--background-secondary);
-            padding: 16px;
-            overflow-y: auto;
+        .chart-info {
+            flex: 1;
         }
 
-        .members-header {
-            color: var(--text-muted);
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
+        .chart-title {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .chart-description {
+            font-size: 14px;
             margin-bottom: 16px;
         }
 
-        .member {
+        .listen-button {
+            background-color: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 32px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .listen-button:hover {
+            transform: scale(1.04);
+        }
+
+        .chart-image {
+            width: 120px;
+            height: 120px;
+        }
+
+        .chart-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        /* Player */
+        .player {
+            height: var(--player-height);
+            background-color: var(--card-bg);
+            border-top: 1px solid #282828;
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
-            padding: 4px;
+            padding: 0 16px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .now-playing {
+            display: flex;
+            align-items: center;
+            width: 30%;
+        }
+
+        .now-playing-image {
+            width: 56px;
+            height: 56px;
             border-radius: 4px;
+            margin-right: 14px;
+        }
+
+        .now-playing-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .track-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
             cursor: pointer;
         }
 
-        .member:hover {
-            background-color: rgba(79, 84, 92, 0.32);
+        .track-name:hover {
+            text-decoration: underline;
         }
 
-        .member-avatar {
+        .artist-name {
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .artist-name:hover {
+            text-decoration: underline;
+            color: var(--text-primary);
+        }
+
+        .like-button {
+            margin-left: 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .like-button:hover {
+            color: var(--text-primary);
+        }
+
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 40%;
+        }
+
+        .control-buttons {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .control-button {
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .control-button:hover {
+            color: var(--text-primary);
+        }
+
+        .control-button.play-pause {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            margin-right: 12px;
+            background-color: var(--text-primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-button.play-pause:hover {
+            transform: scale(1.06);
+        }
+
+        .progress-area {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 12px;
+        }
+
+        .progress-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            min-width: 40px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background-color: #5e5e5e;
+            border-radius: 2px;
+            cursor: pointer;
             position: relative;
         }
 
-        .member-status {
+        .progress {
             position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 2px solid var(--background-secondary);
+            height: 100%;
+            background-color: var(--text-secondary);
+            border-radius: 2px;
+            width: 30%;
         }
 
-        .status-online {
-            background-color: var(--online);
+        .progress-bar:hover .progress {
+            background-color: var(--primary);
         }
 
-        .status-idle {
-            background-color: var(--idle);
+        .player-options {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: 30%;
+            gap: 16px;
         }
 
-        .status-dnd {
-            background-color: var(--dnd);
+        .option-button {
+            color: var(--text-secondary);
+            cursor: pointer;
         }
 
-        .member-name {
-            font-weight: 500;
+        .option-button:hover {
+            color: var(--text-primary);
         }
 
-        /* Модальные окна */
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .volume-bar {
+            width: 80px;
+            height: 4px;
+            background-color: #5e5e5e;
+            border-radius: 2px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .volume-level {
+            position: absolute;
+            height: 100%;
+            background-color: var(--text-secondary);
+            border-radius: 2px;
+            width: 70%;
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -303,746 +608,696 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
             align-items: center;
             justify-content: center;
         }
 
         .modal-content {
-            background-color: var(--background-secondary);
+            background-color: var(--card-bg);
             border-radius: 8px;
             width: 440px;
             max-width: 90vw;
-            padding: 24px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.24);
+            padding: 32px;
+            box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3);
         }
 
         .modal-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .modal-title {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: 700;
             margin-bottom: 8px;
         }
 
         .modal-subtitle {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             font-size: 16px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .form-label {
             display: block;
             margin-bottom: 8px;
-            color: var(--text-muted);
-            font-size: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
             font-weight: 700;
-            text-transform: uppercase;
         }
 
         .form-input {
             width: 100%;
-            background-color: var(--background-tertiary);
-            border: none;
-            border-radius: 3px;
-            padding: 10px;
-            color: var(--text-normal);
+            background-color: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            padding: 14px;
+            color: var(--text-primary);
             outline: none;
+            font-size: 14px;
         }
 
         .form-input:focus {
-            border: 1px solid var(--brand);
+            border-color: var(--primary);
         }
 
         .btn {
-            background-color: var(--brand);
-            color: white;
+            background-color: var(--primary);
+            color: #000;
             border: none;
-            border-radius: 3px;
-            padding: 10px 16px;
-            font-weight: 500;
+            border-radius: 500px;
+            padding: 14px 32px;
+            font-weight: 700;
+            font-size: 14px;
             cursor: pointer;
-            transition: background-color 0.17s ease;
+            transition: all 0.2s;
             width: 100%;
+            margin-top: 8px;
         }
 
         .btn:hover {
-            background-color: var(--brand-hover);
+            transform: scale(1.04);
         }
 
         .btn-secondary {
-            background-color: var(--background-tertiary);
-            color: var(--text-normal);
+            background-color: transparent;
+            border: 1px solid #727272;
+            color: var(--text-primary);
         }
 
-        .btn-secondary:hover {
-            background-color: rgba(79, 84, 92, 0.4);
-        }
-
-        .link {
-            color: var(--brand);
-            cursor: pointer;
+        .form-footer {
+            text-align: center;
+            margin-top: 32px;
+            color: var(--text-secondary);
             font-size: 14px;
         }
 
-        .link:hover {
+        .form-footer a {
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .form-footer a:hover {
             text-decoration: underline;
         }
 
-        .user-profile {
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            background-color: var(--background-secondary);
-            border-top: 1px solid rgba(0, 0, 0, 0.2);
+        /* Lyrics */
+        .lyrics-container {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 24px;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            margin-right: 8px;
-            cursor: pointer;
+        .lyrics-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
         }
 
-        .user-info {
-            flex-grow: 1;
+        .lyrics-text {
+            line-height: 1.8;
+            color: var(--text-secondary);
+            white-space: pre-line;
         }
 
-        .username {
+        .lyrics-line.active {
+            color: var(--primary);
             font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
         }
 
-        .user-tag {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .user-controls {
-            display: flex;
-            gap: 8px;
-        }
-
-        .control-icon {
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-        }
-
-        .control-icon:hover {
-            background-color: rgba(79, 84, 92, 0.32);
-            color: var(--text-normal);
-        }
-
-        /* Адаптивность */
+        /* Responsive */
         @media (max-width: 1200px) {
-            .members-sidebar {
-                display: none;
+            .charts-container {
+                grid-template-columns: 1fr;
             }
         }
 
         @media (max-width: 768px) {
-            .channels-sidebar {
+            .sidebar {
+                width: 70px;
+            }
+            .sidebar .nav-text, .sidebar .playlist-text {
                 display: none;
+            }
+            .main-content {
+                margin-left: 70px;
+            }
+            .nav-item i {
+                margin-right: 0;
+                font-size: 24px;
+            }
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             }
         }
     </style>
 </head>
 <body>
-    <!-- Боковая панель серверов -->
-    <div class="servers-sidebar" id="servers-sidebar">
-        <!-- Серверы будут добавляться динамически -->
-        <div class="server-icon add-server" id="add-server-btn">+</div>
-    </div>
-
-    <!-- Панель каналов -->
-    <div class="channels-sidebar">
-        <div class="server-header">
-            <span id="current-server-name">Название сервера</span>
-            <span>▼</span>
-        </div>
-        <div class="channels-list" id="channels-list">
-            <!-- Каналы будут добавляться динамически -->
-        </div>
-        <div class="user-profile">
-            <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Аватар" class="user-avatar" id="user-avatar">
-            <div class="user-info">
-                <div class="username" id="username">Имя пользователя</div>
-                <div class="user-tag" id="user-tag">#0000</div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-music"></i>
+                <span class="logo-text">MelodyStream</span>
             </div>
-            <div class="user-controls">
-                <div class="control-icon">🔈</div>
-                <div class="control-icon">🔊</div>
-                <div class="control-icon">⚙️</div>
+            
+            <div class="nav-section">
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-home"></i>
+                    <span class="nav-text">Главная</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-search"></i>
+                    <span class="nav-text">Поиск</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-book"></i>
+                    <span class="nav-text">Моя медиатека</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <a href="#" class="nav-item">
+                    <i class="fas fa-plus-square"></i>
+                    <span class="nav-text">Создать плейлист</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-heart"></i>
+                    <span class="nav-text">Любимые треки</span>
+                </a>
+            </div>
+            
+            <div class="playlists">
+                <div class="playlist-item">Мой плейлист #1</div>
+                <div class="playlist-item">Топ хиты 2023</div>
+                <div class="playlist-item">Расслабляющие мелодии</div>
+                <div class="playlist-item">Для тренировки</div>
+                <div class="playlist-item">Дорожные хиты</div>
+                <div class="playlist-item">Романтический вечер</div>
+                
+                <div class="create-playlist">
+                    <i class="fas fa-plus"></i>
+                    <span class="playlist-text">Новый плейлист</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="navigation-buttons">
+                    <div class="nav-button">
+                        <i class="fas fa-chevron-left"></i>
+                    </div>
+                    <div class="nav-button">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <div class="search-bar">
+                    <input type="text" placeholder="Что хотите послушать?">
+                    <i class="fas fa-search"></i>
+                </div>
+                
+                <div class="user-actions">
+                    <button class="upgrade-button">ПРЕМИУМ</button>
+                    <div class="user-profile" id="user-profile">
+                        <div class="user-avatar">U</div>
+                        <span class="user-name">Пользователь</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="content">
+                <div class="section-header">
+                    <h2 class="section-title">Недавно прослушано</h2>
+                    <span class="see-all">Показать все</span>
+                </div>
+                
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/300" alt="Album Cover">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="card-title">Топ-100 России</div>
+                        <div class="card-description">Самые популярные треки в России</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/300" alt="Album Cover">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="card-title">Релизы недели</div>
+                        <div class="card-description">Новые треки, которые вы ждали</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/300" alt="Album Cover">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="card-title">Чилл-аут</div>
+                        <div class="card-description">Расслабляющие треки для отдыха</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/300" alt="Album Cover">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="card-title">Энергичные хиты</div>
+                        <div class="card-description">Зарядитесь энергией с этими треками</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/300" alt="Album Cover">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="card-title">Русский рэп</div>
+                        <div class="card-description">Лучшие треки русского рэпа</div>
+                    </div>
+                </div>
+                
+                <div class="section-header">
+                    <h2 class="section-title">Чарты</h2>
+                    <span class="see-all">Показать все</span>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-info">
+                            <div class="chart-title">Топ-50 мира</div>
+                            <div class="chart-description">Самые популярные треки в мире прямо сейчас</div>
+                            <button class="listen-button">СЛУШАТЬ</button>
+                        </div>
+                        <div class="chart-image">
+                            <img src="https://via.placeholder.com/300" alt="Chart Cover">
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card" style="background: linear-gradient(149.46deg, #ff4e50, #f9d423);">
+                        <div class="chart-info">
+                            <div class="chart-title">Вирусные треки</div>
+                            <div class="chart-description">Треки, которые все обсуждают</div>
+                            <button class="listen-button">СЛУШАТЬ</button>
+                        </div>
+                        <div class="chart-image">
+                            <img src="https://via.placeholder.com/300" alt="Chart Cover">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-header">
+                    <h2 class="section-title">Рекомендуем</h2>
+                    <span class="see-all">Показать все</span>
+                </div>
+                
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/300" alt="Album Cover">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="card-title">Discover Weekly</div>
+                        <div class="card-description">Ваш персональный микс недели</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/300" alt="Album Cover">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="card-title">Daily Mix 1</div>
+                        <div class="card-description">Микс на основе ваших вкусов</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/300" alt="Album Cover">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="card-title">Release Radar</div>
+                        <div class="card-description">Новые релизы от исполнителей, которые вам нравятся</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/300" alt="Album Cover">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="card-title">Chill Hits</div>
+                        <div class="card-description">Расслабляющие треки для любого настроения</div>
+                    </div>
+                </div>
+                
+                <div class="lyrics-container">
+                    <div class="lyrics-title">Текст песни</div>
+                    <div class="lyrics-text" id="lyrics-text">
+[Куплет 1]
+Этот город спит, а я не сплю
+В голове моей опять всякая фигня
+Я включаю свет, сажусь за стол
+И пишу этот текст, пока не подох
+
+[Припев]
+И пусть говорят, что я не прав
+Что мои мечты — это просто дым
+Но я верю в то, что каждый шаг
+Приведёт меня к чему-то большим
+
+[Куплет 2]
+За окном дождь, а на душе тепло
+Потому что знаю — всё будет хорошо
+Пусть не сразу, пусть через года
+Но моя звезда когда-нибудь взойдёт
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Player -->
+            <div class="player">
+                <div class="now-playing">
+                    <img src="https://via.placeholder.com/300" alt="Now Playing" class="now-playing-image">
+                    <div class="now-playing-info">
+                        <div class="track-name">Название трека</div>
+                        <div class="artist-name">Исполнитель</div>
+                    </div>
+                    <div class="like-button">
+                        <i class="far fa-heart"></i>
+                    </div>
+                </div>
+                
+                <div class="player-controls">
+                    <div class="control-buttons">
+                        <div class="control-button">
+                            <i class="fas fa-random"></i>
+                        </div>
+                        <div class="control-button">
+                            <i class="fas fa-step-backward"></i>
+                        </div>
+                        <div class="control-button play-pause">
+                            <i class="fas fa-play"></i>
+                        </div>
+                        <div class="control-button">
+                            <i class="fas fa-step-forward"></i>
+                        </div>
+                        <div class="control-button">
+                            <i class="fas fa-redo"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-area">
+                        <span class="progress-time">1:23</span>
+                        <div class="progress-bar">
+                            <div class="progress"></div>
+                        </div>
+                        <span class="progress-time">3:45</span>
+                    </div>
+                </div>
+                
+                <div class="player-options">
+                    <div class="option-button">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="option-button">
+                        <i class="fas fa-laptop"></i>
+                    </div>
+                    <div class="volume-container">
+                        <div class="option-button">
+                            <i class="fas fa-volume-up"></i>
+                        </div>
+                        <div class="volume-bar">
+                            <div class="volume-level"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- Основная область чата -->
-    <div class="chat-area">
-        <div class="chat-header">
-            <div class="chat-header-icon">#</div>
-            <span id="current-channel-name">общий</span>
-        </div>
-        <div class="chat-messages" id="chat-messages">
-            <!-- Сообщения будут добавляться динамически -->
-        </div>
-        <div class="chat-input-container">
-            <textarea class="chat-input" id="chat-input" placeholder="Написать сообщение в #общий" rows="1"></textarea>
-        </div>
-    </div>
-
-    <!-- Панель участников -->
-    <div class="members-sidebar">
-        <div class="members-header">УЧАСТНИКИ — <span id="members-count">0</span></div>
-        <div id="members-list">
-            <!-- Участники будут добавляться динамически -->
-        </div>
-    </div>
-
-    <!-- Модальное окно входа -->
+    
+    <!-- Login Modal -->
     <div class="modal" id="login-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">С возвращением!</div>
-                <div class="modal-subtitle">Мы так рады видеть вас снова!</div>
+                <div class="modal-title">Войти в MelodyStream</div>
+                <div class="modal-subtitle">Продолжайте слушать свою музыку</div>
             </div>
             <div class="form-group">
-                <label class="form-label">ЭЛЕКТРОННАЯ ПОЧТА</label>
-                <input type="email" class="form-input" id="login-email" placeholder="example@mail.com">
+                <label class="form-label">ЭЛЕКТРОННАЯ ПОЧТА ИЛИ ИМЯ ПОЛЬЗОВАТЕЛЯ</label>
+                <input type="text" class="form-input" id="login-email" placeholder="example@mail.com">
             </div>
             <div class="form-group">
                 <label class="form-label">ПАРОЛЬ</label>
                 <input type="password" class="form-input" id="login-password" placeholder="••••••••••••">
             </div>
             <button class="btn" id="login-btn">Войти</button>
-            <div style="margin-top: 8px; font-size: 14px;">
-                Нужна учетная запись? <span class="link" id="register-link">Зарегистрироваться</span>
+            <div class="form-footer">
+                Нет учетной записи? <a href="#" id="register-link">Зарегистрироваться</a>
             </div>
         </div>
     </div>
-
-    <!-- Модальное окно регистрации -->
+    
+    <!-- Register Modal -->
     <div class="modal" id="register-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">Создайте учетную запись</div>
+                <div class="modal-title">Зарегистрироваться в MelodyStream</div>
+                <div class="modal-subtitle">Начните слушать музыку бесплатно</div>
             </div>
             <div class="form-group">
                 <label class="form-label">ЭЛЕКТРОННАЯ ПОЧТА</label>
                 <input type="email" class="form-input" id="register-email" placeholder="example@mail.com">
             </div>
             <div class="form-group">
-                <label class="form-label">ИМЯ ПОЛЬЗОВАТЕЛЯ</label>
-                <input type="text" class="form-input" id="register-username" placeholder="Имя пользователя">
-            </div>
-            <div class="form-group">
                 <label class="form-label">ПАРОЛЬ</label>
                 <input type="password" class="form-input" id="register-password" placeholder="••••••••••••">
             </div>
-            <button class="btn" id="register-btn">Продолжить</button>
-            <div style="margin-top: 8px; font-size: 14px;">
-                Уже есть учетная запись? <span class="link" id="login-link">Войти</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно создания сервера -->
-    <div class="modal" id="create-server-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Настройте свой сервер</div>
-                <div class="modal-subtitle">Придайте своему новому серверу индивидуальность с помощью названия и иконки.</div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">НАЗВАНИЕ СЕРВЕРА</label>
-                <input type="text" class="form-input" id="server-name" placeholder="Введите название сервера">
-            </div>
-            <div class="form-group">
-                <label class="form-label">ИКОНКА СЕРВЕРА (URL)</label>
-                <input type="text" class="form-input" id="server-icon" placeholder="https://example.com/icon.png">
-            </div>
-            <button class="btn" id="create-server-btn">Создать</button>
-        </div>
-    </div>
-
-    <!-- Модальное окно профиля -->
-    <div class="modal" id="profile-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Мой профиль</div>
-            </div>
             <div class="form-group">
                 <label class="form-label">ИМЯ ПОЛЬЗОВАТЕЛЯ</label>
-                <input type="text" class="form-input" id="profile-username" placeholder="Имя пользователя">
+                <input type="text" class="form-input" id="register-username" placeholder="Ваше имя пользователя">
+            </div>
+            <button class="btn" id="register-btn">Зарегистрироваться</button>
+            <div class="form-footer">
+                Уже есть учетная запись? <a href="#" id="login-link">Войти</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Premium Modal -->
+    <div class="modal" id="premium-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">MelodyStream Premium</div>
+                <div class="modal-subtitle">Попробуйте Premium бесплатно на 1 месяц</div>
             </div>
             <div class="form-group">
-                <label class="form-label">АВАТАР (URL)</label>
-                <input type="text" class="form-input" id="profile-avatar" placeholder="https://example.com/avatar.png">
+                <p style="margin-bottom: 16px; line-height: 1.5;">С Premium вы получите:</p>
+                <ul style="padding-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+                    <li>Высокое качество звука</li>
+                    <li>Скачивание музыки для оффлайн-прослушивания</li>
+                    <li>Прослушивание без рекламы</li>
+                    <li>Неограниченные пропуски треков</li>
+                </ul>
             </div>
-            <div class="form-group">
-                <label class="form-label">СТАТУС</label>
-                <select class="form-input" id="profile-status">
-                    <option value="online">В сети</option>
-                    <option value="idle">Не активен</option>
-                    <option value="dnd">Не беспокоить</option>
-                </select>
+            <button class="btn" id="start-premium-btn">ПОПРОБОВАТЬ БЕСПЛАТНО</button>
+            <div class="form-footer">
+                Действуют условия подписки. Отменить можно в любой момент.
             </div>
-            <button class="btn" id="save-profile-btn">Сохранить</button>
         </div>
     </div>
 
     <script>
-        // Инициализация Supabase
-        const SUPABASE_URL = 'https://your-project.supabase.co';
-        const SUPABASE_ANON_KEY = 'your-anon-key';
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // Состояние приложения
-        let currentUser = null;
-        let currentServer = null;
-        let currentChannel = null;
-        let servers = [];
-        let friends = [];
-
         // DOM элементы
         const loginModal = document.getElementById('login-modal');
         const registerModal = document.getElementById('register-modal');
-        const createServerModal = document.getElementById('create-server-modal');
-        const profileModal = document.getElementById('profile-modal');
-        const serversSidebar = document.getElementById('servers-sidebar');
-        const channelsList = document.getElementById('channels-list');
-        const chatMessages = document.getElementById('chat-messages');
-        const membersList = document.getElementById('members-list');
-        const chatInput = document.getElementById('chat-input');
-
-        // Инициализация приложения
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Проверяем, авторизован ли пользователь
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (session) {
-                currentUser = session.user;
-                await loadUserData();
-                await loadServers();
-                showMainInterface();
-            } else {
-                showLoginModal();
-            }
-
-            // Настройка обработчиков событий
-            setupEventListeners();
+        const premiumModal = document.getElementById('premium-modal');
+        const userProfile = document.getElementById('user-profile');
+        const upgradeButton = document.querySelector('.upgrade-button');
+        
+        // Показать модальное окно входа при клике на профиль
+        userProfile.addEventListener('click', () => {
+            loginModal.style.display = 'flex';
         });
-
-        // Настройка обработчиков событий
-        function setupEventListeners() {
-            // Модальные окна
-            document.getElementById('login-link').addEventListener('click', () => {
-                loginModal.style.display = 'none';
-                registerModal.style.display = 'flex';
-            });
-
-            document.getElementById('register-link').addEventListener('click', () => {
-                registerModal.style.display = 'none';
-                loginModal.style.display = 'flex';
-            });
-
-            document.getElementById('login-btn').addEventListener('click', login);
-            document.getElementById('register-btn').addEventListener('click', register);
-            document.getElementById('add-server-btn').addEventListener('click', () => {
-                createServerModal.style.display = 'flex';
-            });
-            document.getElementById('create-server-btn').addEventListener('click', createServer);
-            document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
-
-            // Открытие профиля при клике на аватар или имя пользователя
-            document.getElementById('user-avatar').addEventListener('click', () => {
-                loadProfileData();
-                profileModal.style.display = 'flex';
-            });
-            document.getElementById('username').addEventListener('click', () => {
-                loadProfileData();
-                profileModal.style.display = 'flex';
-            });
-
-            // Ввод сообщения
-            chatInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-        }
-
-        // Функция входа
-        async function login() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-
-            if (error) {
-                alert('Ошибка входа: ' + error.message);
-            } else {
-                currentUser = data.user;
-                await loadUserData();
-                await loadServers();
-                showMainInterface();
+        
+        // Показать модальное окно премиум
+        upgradeButton.addEventListener('click', () => {
+            premiumModal.style.display = 'flex';
+        });
+        
+        // Переключение между модальными окнами входа и регистрации
+        document.getElementById('register-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            loginModal.style.display = 'none';
+            registerModal.style.display = 'flex';
+        });
+        
+        document.getElementById('login-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            registerModal.style.display = 'none';
+            loginModal.style.display = 'flex';
+        });
+        
+        // Закрытие модальных окон при клике вне их
+        window.addEventListener('click', (e) => {
+            if (e.target === loginModal) {
                 loginModal.style.display = 'none';
             }
-        }
-
-        // Функция регистрации
-        async function register() {
-            const email = document.getElementById('register-email').value;
-            const username = document.getElementById('register-username').value;
-            const password = document.getElementById('register-password').value;
-
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        username,
-                        avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
-                        status: 'online'
+            if (e.target === registerModal) {
+                registerModal.style.display = 'none';
+            }
+            if (e.target === premiumModal) {
+                premiumModal.style.display = 'none';
+            }
+        });
+        
+        // Воспроизведение/пауза
+        const playPauseButton = document.querySelector('.play-pause');
+        let isPlaying = false;
+        
+        playPauseButton.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            const icon = playPauseButton.querySelector('i');
+            icon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+            
+            // Обновление текста песни (имитация)
+            if (isPlaying) {
+                startLyricsAnimation();
+            } else {
+                stopLyricsAnimation();
+            }
+        });
+        
+        // Анимация текста песни
+        let lyricsInterval;
+        let currentLine = 0;
+        
+        function startLyricsAnimation() {
+            const lyricsText = document.getElementById('lyrics-text');
+            const lines = lyricsText.innerHTML.split('\n');
+            
+            currentLine = 0;
+            lyricsInterval = setInterval(() => {
+                // Убираем выделение со всех строк
+                lines.forEach((line, index) => {
+                    if (line.includes('active')) {
+                        lines[index] = line.replace('active', '').trim();
                     }
-                }
-            });
-
-            if (error) {
-                alert('Ошибка регистрации: ' + error.message);
-            } else {
-                alert('Регистрация успешна! Проверьте вашу почту для подтверждения.');
-                registerModal.style.display = 'none';
-                loginModal.style.display = 'flex';
-            }
-        }
-
-        // Загрузка данных пользователя
-        async function loadUserData() {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .single();
-
-            if (data) {
-                document.getElementById('username').textContent = data.username;
-                document.getElementById('user-tag').textContent = '#' + data.discriminator;
-                document.getElementById('user-avatar').src = data.avatar;
-            }
-        }
-
-        // Загрузка серверов
-        async function loadServers() {
-            const { data, error } = await supabase
-                .from('servers')
-                .select('*')
-                .eq('owner_id', currentUser.id);
-
-            if (data) {
-                servers = data;
-                renderServers();
-                
-                if (servers.length > 0) {
-                    selectServer(servers[0]);
-                }
-            }
-        }
-
-        // Отображение серверов
-        function renderServers() {
-            serversSidebar.innerHTML = '';
-            
-            servers.forEach(server => {
-                const serverElement = document.createElement('div');
-                serverElement.className = 'server-icon';
-                serverElement.innerHTML = server.icon_url ? 
-                    `<img src="${server.icon_url}" alt="${server.name}">` : 
-                    server.name.charAt(0).toUpperCase();
-                
-                serverElement.addEventListener('click', () => selectServer(server));
-                serversSidebar.appendChild(serverElement);
-            });
-            
-            // Добавляем кнопку создания сервера в конец
-            const addServerBtn = document.createElement('div');
-            addServerBtn.className = 'server-icon add-server';
-            addServerBtn.id = 'add-server-btn';
-            addServerBtn.textContent = '+';
-            addServerBtn.addEventListener('click', () => {
-                createServerModal.style.display = 'flex';
-            });
-            serversSidebar.appendChild(addServerBtn);
-        }
-
-        // Выбор сервера
-        async function selectServer(server) {
-            currentServer = server;
-            document.getElementById('current-server-name').textContent = server.name;
-            
-            // Загрузка каналов сервера
-            const { data, error } = await supabase
-                .from('channels')
-                .select('*')
-                .eq('server_id', server.id);
-            
-            if (data) {
-                renderChannels(data);
-                
-                if (data.length > 0) {
-                    selectChannel(data[0]);
-                }
-            }
-            
-            // Загрузка участников сервера
-            await loadServerMembers(server.id);
-        }
-
-        // Отображение каналов
-        function renderChannels(channels) {
-            channelsList.innerHTML = '';
-            
-            // Группируем каналы по категориям
-            const categories = {};
-            channels.forEach(channel => {
-                if (!categories[channel.category]) {
-                    categories[channel.category] = [];
-                }
-                categories[channel.category].push(channel);
-            });
-            
-            // Создаем элементы для каждой категории и каналов
-            Object.keys(categories).forEach(category => {
-                const categoryElement = document.createElement('div');
-                categoryElement.className = 'channel-category';
-                
-                const categoryHeader = document.createElement('div');
-                categoryHeader.className = 'category-header';
-                categoryHeader.innerHTML = `
-                    <span>${category}</span>
-                    <span>+</span>
-                `;
-                categoryElement.appendChild(categoryHeader);
-                
-                categories[category].forEach(channel => {
-                    const channelElement = document.createElement('div');
-                    channelElement.className = 'channel';
-                    channelElement.innerHTML = `
-                        <span class="channel-icon">#</span>
-                        <span>${channel.name}</span>
-                    `;
-                    channelElement.addEventListener('click', () => selectChannel(channel));
-                    categoryElement.appendChild(channelElement);
                 });
                 
-                channelsList.appendChild(categoryElement);
-            });
-        }
-
-        // Выбор канала
-        async function selectChannel(channel) {
-            currentChannel = channel;
-            document.getElementById('current-channel-name').textContent = channel.name;
-            document.getElementById('chat-input').placeholder = `Написать сообщение в #${channel.name}`;
-            
-            // Загрузка сообщений канала
-            const { data, error } = await supabase
-                .from('messages')
-                .select('*, profiles(username, avatar)')
-                .eq('channel_id', channel.id)
-                .order('created_at', { ascending: true });
-            
-            if (data) {
-                renderMessages(data);
-            }
-        }
-
-        // Отображение сообщений
-        function renderMessages(messages) {
-            chatMessages.innerHTML = '';
-            
-            messages.forEach(message => {
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message';
-                messageElement.innerHTML = `
-                    <img src="${message.profiles.avatar}" alt="Аватар" class="message-avatar">
-                    <div class="message-content">
-                        <div class="message-header">
-                            <span class="message-author">${message.profiles.username}</span>
-                            <span class="message-timestamp">${formatTimestamp(message.created_at)}</span>
-                        </div>
-                        <div class="message-text">${message.content}</div>
-                    </div>
-                `;
-                chatMessages.appendChild(messageElement);
-            });
-            
-            // Прокрутка вниз
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // Загрузка участников сервера
-        async function loadServerMembers(serverId) {
-            const { data, error } = await supabase
-                .from('server_members')
-                .select('profiles(username, avatar, status)')
-                .eq('server_id', serverId);
-            
-            if (data) {
-                renderMembers(data.map(item => item.profiles));
-            }
-        }
-
-        // Отображение участников
-        function renderMembers(members) {
-            membersList.innerHTML = '';
-            document.getElementById('members-count').textContent = members.length;
-            
-            members.forEach(member => {
-                const memberElement = document.createElement('div');
-                memberElement.className = 'member';
-                memberElement.innerHTML = `
-                    <div class="member-avatar">
-                        <img src="${member.avatar}" alt="Аватар">
-                        <div class="member-status status-${member.status}"></div>
-                    </div>
-                    <div class="member-name">${member.username}</div>
-                `;
-                membersList.appendChild(memberElement);
-            });
-        }
-
-        // Создание сервера
-        async function createServer() {
-            const name = document.getElementById('server-name').value;
-            const iconUrl = document.getElementById('server-icon').value;
-            
-            const { data, error } = await supabase
-                .from('servers')
-                .insert([
-                    {
-                        name,
-                        icon_url: iconUrl,
-                        owner_id: currentUser.id
-                    }
-                ])
-                .select();
-            
-            if (error) {
-                alert('Ошибка создания сервера: ' + error.message);
-            } else {
-                createServerModal.style.display = 'none';
-                await loadServers();
+                // Добавляем выделение к текущей строке
+                if (currentLine < lines.length) {
+                    lines[currentLine] = `<span class="active">${lines[currentLine]}</span>`;
+                    currentLine++;
+                } else {
+                    clearInterval(lyricsInterval);
+                }
                 
-                // Создаем общий канал для нового сервера
-                await supabase
-                    .from('channels')
-                    .insert([
-                        {
-                            name: 'общий',
-                            server_id: data[0].id,
-                            category: 'ТЕКСТОВЫЕ КАНАЛЫ'
-                        }
-                    ]);
-            }
+                lyricsText.innerHTML = lines.join('\n');
+            }, 2000);
         }
-
-        // Отправка сообщения
-        async function sendMessage() {
-            const content = chatInput.value.trim();
+        
+        function stopLyricsAnimation() {
+            clearInterval(lyricsInterval);
+        }
+        
+        // Обновление прогресса воспроизведения
+        const progressBar = document.querySelector('.progress-bar');
+        const progress = document.querySelector('.progress');
+        
+        progressBar.addEventListener('click', (e) => {
+            const clickX = e.offsetX;
+            const progressWidth = progressBar.clientWidth;
+            const newProgress = (clickX / progressWidth) * 100;
+            progress.style.width = `${newProgress}%`;
             
-            if (!content || !currentChannel) return;
+            // Обновление времени
+            const currentTime = document.querySelector('.progress-time:first-child');
+            const totalTime = document.querySelector('.progress-time:last-child');
             
-            const { data, error } = await supabase
-                .from('messages')
-                .insert([
-                    {
-                        content,
-                        channel_id: currentChannel.id,
-                        author_id: currentUser.id
-                    }
-                ])
-                .select();
-            
-            if (error) {
-                alert('Ошибка отправки сообщения: ' + error.message);
+            // Имитация обновления времени
+            const totalSeconds = 225; // 3:45 в секундах
+            const newSeconds = Math.floor((newProgress / 100) * totalSeconds);
+            const minutes = Math.floor(newSeconds / 60);
+            const seconds = newSeconds % 60;
+            currentTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        });
+        
+        // Имитация входа/регистрации
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const email = document.getElementById('login-email').value;
+            if (email) {
+                const username = email.split('@')[0];
+                document.querySelector('.user-name').textContent = username;
+                document.querySelector('.user-avatar').textContent = username.charAt(0).toUpperCase();
+                loginModal.style.display = 'none';
             } else {
-                chatInput.value = '';
-                // Обновляем сообщения
-                await selectChannel(currentChannel);
+                alert('Пожалуйста, введите email');
             }
-        }
-
-        // Загрузка данных профиля
-        async function loadProfileData() {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .single();
-            
-            if (data) {
-                document.getElementById('profile-username').value = data.username;
-                document.getElementById('profile-avatar').value = data.avatar;
-                document.getElementById('profile-status').value = data.status;
-            }
-        }
-
-        // Сохранение профиля
-        async function saveProfile() {
-            const username = document.getElementById('profile-username').value;
-            const avatar = document.getElementById('profile-avatar').value;
-            const status = document.getElementById('profile-status').value;
-            
-            const { data, error } = await supabase
-                .from('profiles')
-                .update({
-                    username,
-                    avatar,
-                    status
-                })
-                .eq('id', currentUser.id);
-            
-            if (error) {
-                alert('Ошибка сохранения профиля: ' + error.message);
+        });
+        
+        document.getElementById('register-btn').addEventListener('click', () => {
+            const username = document.getElementById('register-username').value;
+            if (username) {
+                document.querySelector('.user-name').textContent = username;
+                document.querySelector('.user-avatar').textContent = username.charAt(0).toUpperCase();
+                registerModal.style.display = 'none';
             } else {
-                profileModal.style.display = 'none';
-                await loadUserData();
+                alert('Пожалуйста, введите имя пользователя');
             }
-        }
-
-        // Вспомогательные функции
-        function showLoginModal() {
-            loginModal.style.display = 'flex';
-        }
-
-        function showMainInterface() {
-            loginModal.style.display = 'none';
-            registerModal.style.display = 'none';
-        }
-
-        function formatTimestamp(timestamp) {
-            const date = new Date(timestamp);
-            return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        // Имитация работы с друзьями (для демонстрации)
-        async function addFriend(friendId) {
-            const { data, error } = await supabase
-                .from('friends
+        });
+        
+        // Имитация начала премиум-подписки
+        document.getElementById('start-premium-btn').addEventListener('click', () => {
+            alert('Поздравляем! Вы начали бесплатный пробный период MelodyStream Premium!');
+            premiumModal.style.display = 'none';
+            upgradeButton.textContent = 'ПРЕМИУМ АКТИВЕН';
+            upgradeButton.style.backgroundColor = '#1aa34a';
+            upgradeButton.style.borderColor = '#1aa34a';
+        });
+        
+        // Имитация поиска
+        const searchInput = document.querySelector('.search-bar input');
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = searchInput.value;
+                if (query) {
+                    alert(`Результаты поиска для: ${query}`);
+                    // В реальном приложении здесь был бы запрос к API
+                }
+            }
+        });
+    </script>
+</body>
+</html>
