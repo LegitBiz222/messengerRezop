@@ -308,6 +308,12 @@
         .message {
             margin-bottom: 15px;
             display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .message-avatar {
@@ -352,6 +358,29 @@
             word-wrap: break-word;
             font-size: 14px;
             line-height: 1.4;
+        }
+
+        .my-message {
+            flex-direction: row-reverse;
+        }
+
+        .my-message .message-avatar {
+            margin-right: 0;
+            margin-left: 15px;
+        }
+
+        .my-message .message-content {
+            max-width: 70%;
+            align-items: flex-end;
+        }
+
+        .my-message .message-text {
+            background-color: var(--primary-color);
+            border-radius: 15px 0 15px 15px;
+        }
+
+        .my-message .message-header {
+            justify-content: flex-end;
         }
 
         .message-input-container {
@@ -918,7 +947,7 @@
                         .from('users')
                         .select('id')
                         .eq('email', email)
-                        .single();
+                        .maybeSingle();
 
                     if (existingUser) {
                         updateDebugInfo('❌ Пользователь с таким email уже существует', true);
@@ -942,12 +971,16 @@
                     if (error) throw error;
 
                     updateDebugInfo(`✅ Пользователь создан: ${newUser.username}`);
-                    document.getElementById('registerSuccess').textContent = 'Аккаунт создан! Теперь войдите.';
                     
-                    setTimeout(() => {
-                        this.switchToLogin();
-                        document.getElementById('loginEmail').value = email;
-                    }, 2000);
+                    // СРАЗУ ВХОДИМ ПОСЛЕ РЕГИСТРАЦИИ
+                    this.currentUser = newUser;
+                    localStorage.setItem('messenger_user', JSON.stringify(this.currentUser));
+                    
+                    document.getElementById('registerSuccess').textContent = 'Аккаунт создан! Входим...';
+                    
+                    setTimeout(async () => {
+                        await this.showMessenger();
+                    }, 1000);
 
                 } catch (error) {
                     updateDebugInfo(`❌ Ошибка регистрации: ${error.message}`, true);
@@ -1090,24 +1123,13 @@
                 messagesContainer.innerHTML = '';
 
                 messages.forEach(message => {
-                    const messageElement = document.createElement('div');
-                    messageElement.className = 'message';
-                    messageElement.innerHTML = `
-                        <div class="message-avatar">${message.users.avatar}</div>
-                        <div class="message-content">
-                            <div class="message-header">
-                                <div class="message-sender">${message.users.username}</div>
-                                <div class="message-time">${this.formatTime(message.created_at)}</div>
-                            </div>
-                            <div class="message-text">${message.message}</div>
-                        </div>
-                    `;
-                    messagesContainer.appendChild(messageElement);
+                    this.addMessageToChat(message, false);
                 });
 
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
 
+            // 🔥 ОСНОВНОЕ ИСПРАВЛЕНИЕ - мгновенное добавление сообщений
             async sendMessage() {
                 const messageInput = document.getElementById('messageInput');
                 const text = messageInput.value.trim();
@@ -1116,8 +1138,13 @@
 
                 updateDebugInfo(`Отправка сообщения: ${text.substring(0, 20)}...`);
                 
+                // Блокируем кнопку отправки
+                const sendBtn = document.getElementById('sendBtn');
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
                 try {
-                    const { error } = await supabase
+                    const { data: newMessage, error } = await supabase
                         .from('messages')
                         .insert([
                             {
@@ -1125,7 +1152,15 @@
                                 user_id: this.currentUser.id,
                                 message: text
                             }
-                        ]);
+                        ])
+                        .select(`
+                            *,
+                            users (
+                                username,
+                                avatar
+                            )
+                        `)
+                        .single();
 
                     if (error) {
                         updateDebugInfo(`❌ Ошибка отправки: ${error.message}`, true);
@@ -1135,17 +1170,60 @@
                     updateDebugInfo('✅ Сообщение отправлено');
                     messageInput.value = '';
 
+                    // МГНОВЕННО добавляем сообщение в чат
+                    this.addMessageToChat(newMessage, true);
+
                 } catch (error) {
                     console.error('Ошибка отправки сообщения:', error);
-                    alert('Ошибка отправки сообщения');
+                    alert('Ошибка отправки сообщения: ' + error.message);
+                } finally {
+                    // Разблокируем кнопку
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Отправить';
                 }
+            }
+
+            // Функция для мгновенного добавления сообщения в чат
+            addMessageToChat(messageData, isMyMessage = false) {
+                const messagesContainer = document.getElementById('messagesContainer');
+                
+                // Убираем welcome/loading сообщения если есть
+                const welcomeMsg = messagesContainer.querySelector('.welcome-message');
+                const loadingMsg = messagesContainer.querySelector('.loading');
+                if (welcomeMsg || loadingMsg) {
+                    messagesContainer.innerHTML = '';
+                }
+
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${isMyMessage ? 'my-message' : ''}`;
+                messageElement.innerHTML = `
+                    <div class="message-avatar">${messageData.users.avatar}</div>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <div class="message-sender">${messageData.users.username}</div>
+                            <div class="message-time">${this.formatTime(messageData.created_at)}</div>
+                        </div>
+                        <div class="message-text">${messageData.message}</div>
+                    </div>
+                `;
+                
+                messagesContainer.appendChild(messageElement);
+                
+                // Прокручиваем вниз к новому сообщению
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                updateDebugInfo(`✅ Сообщение добавлено в чат мгновенно (${isMyMessage ? 'мое' : 'чужое'})`);
             }
 
             async setupRealtimeSubscription() {
                 updateDebugInfo('Настройка real-time подписки...');
+                
+                // Отписываемся от старых подписок
+                await supabase.removeAllChannels();
+
                 // Подписка на новые сообщения в реальном времени
                 supabase
-                    .channel('public:messages')
+                    .channel('messages-channel')
                     .on(
                         'postgres_changes',
                         {
@@ -1155,14 +1233,40 @@
                         },
                         (payload) => {
                             updateDebugInfo('🔄 Новое сообщение получено в реальном времени');
-                            // Если новое сообщение в текущем канале, обновляем чат
+                            
+                            // Проверяем, что это сообщение для текущего канала
                             if (payload.new.channel_id === this.currentChannel?.id) {
-                                this.loadMessages();
+                                updateDebugInfo(`✅ Новое сообщение для текущего канала: ${this.currentChannel.name}`);
+                                
+                                // Получаем полную информацию о сообщении с пользователем
+                                supabase
+                                    .from('messages')
+                                    .select(`
+                                        *,
+                                        users (
+                                            username,
+                                            avatar
+                                        )
+                                    `)
+                                    .eq('id', payload.new.id)
+                                    .single()
+                                    .then(({ data: fullMessage }) => {
+                                        if (fullMessage) {
+                                            // Проверяем, не наше ли это сообщение (чтобы не дублировать)
+                                            const isMyMessage = fullMessage.user_id === this.currentUser.id;
+                                            if (!isMyMessage) {
+                                                this.addMessageToChat(fullMessage, false);
+                                            }
+                                        }
+                                    });
                             }
                         }
                     )
                     .subscribe((status) => {
                         updateDebugInfo(`Real-time статус: ${status}`);
+                        if (status === 'SUBSCRIBED') {
+                            this.updateConnectionStatus('✅ Real-time включен', 'status-online');
+                        }
                     });
             }
 
