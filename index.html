@@ -3,66 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Clone</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Discord-подобный мессенджер</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Все стили остаются такими же как в предыдущем коде */
+        :root {
+            --background-primary: #36393f;
+            --background-secondary: #2f3136;
+            --background-tertiary: #202225;
+            --text-normal: #dcddde;
+            --text-muted: #72767d;
+            --brand: #5865f2;
+            --brand-hover: #4752c4;
+            --online: #3ba55c;
+            --idle: #faa81a;
+            --dnd: #ed4245;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary-color: #5865F2;
-            --text-color: #ffffff;
-            --bg-color: #36393f;
-            --sidebar-bg: #2f3136;
-            --chat-bg: #36393f;
-            --message-bg: #40444b;
-            --input-bg: #484c52;
-            --border-color: #40444b;
-            --hover-color: #3a3d42;
-            --server-sidebar: #202225;
-            --accent-color: #5865F2;
-        }
-
-        .theme-light {
-            --primary-color: #5865F2;
-            --text-color: #2e3338;
-            --bg-color: #ffffff;
-            --sidebar-bg: #f2f3f5;
-            --chat-bg: #ffffff;
-            --message-bg: #f2f3f5;
-            --input-bg: #f2f3f5;
-            --border-color: #e3e5e8;
-            --hover-color: #e3e5e8;
-            --server-sidebar: #e3e5e8;
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--background-primary);
+            color: var(--text-normal);
+            display: flex;
             height: 100vh;
             overflow: hidden;
         }
 
-        .container {
-            display: flex;
-            height: 100vh;
-        }
-
-        /* Все остальные стили остаются без изменений */
-        .server-sidebar {
+        /* Боковая панель серверов */
+        .servers-sidebar {
             width: 72px;
-            background-color: var(--server-sidebar);
+            background-color: var(--background-tertiary);
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 12px 0;
-            gap: 8px;
             overflow-y: auto;
         }
 
@@ -70,80 +49,77 @@
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            background: var(--primary-color);
+            background-color: var(--background-secondary);
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: bold;
             cursor: pointer;
-            transition: border-radius 0.2s;
+            transition: border-radius 0.2s, background-color 0.2s;
             position: relative;
         }
 
         .server-icon:hover {
             border-radius: 16px;
+            background-color: var(--brand);
         }
 
         .server-icon.active {
             border-radius: 16px;
-            background: var(--accent-color);
+            background-color: var(--brand);
         }
 
-        .server-separator {
-            width: 32px;
-            height: 2px;
-            background: var(--border-color);
-            margin: 4px 0;
+        .server-icon.add-server {
+            background-color: var(--background-secondary);
+            color: var(--online);
+            font-size: 24px;
         }
 
-        .add-server {
-            background: #36393f;
-            color: #3ba55c;
+        .server-icon.add-server:hover {
+            background-color: var(--online);
+            color: white;
         }
 
-        .explore-servers {
-            background: #36393f;
-            color: #3ba55c;
+        .server-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            object-fit: cover;
         }
 
+        /* Панель каналов */
         .channels-sidebar {
             width: 240px;
-            background-color: var(--sidebar-bg);
+            background-color: var(--background-secondary);
             display: flex;
             flex-direction: column;
         }
 
         .server-header {
             padding: 16px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        .server-name {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
         .channels-list {
-            flex: 1;
-            padding: 16px;
+            padding: 8px;
+            flex-grow: 1;
             overflow-y: auto;
         }
 
         .channel-category {
-            margin-bottom: 16px;
+            margin-top: 16px;
         }
 
         .category-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 4px 0;
-            color: #8e9297;
+            padding: 4px 8px;
+            color: var(--text-muted);
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
@@ -155,151 +131,53 @@
             cursor: pointer;
             display: flex;
             align-items: center;
-            color: #8e9297;
-            font-size: 14px;
-            margin-bottom: 2px;
+            color: var(--text-muted);
         }
 
         .channel:hover {
-            background-color: var(--hover-color);
-            color: var(--text-color);
+            background-color: rgba(79, 84, 92, 0.32);
+            color: var(--text-normal);
         }
 
         .channel.active {
-            background-color: var(--hover-color);
-            color: var(--text-color);
+            background-color: rgba(79, 84, 92, 0.4);
+            color: var(--text-normal);
         }
 
         .channel-icon {
             margin-right: 6px;
         }
 
-        .voice-channel .channel-icon {
-            color: #8e9297;
-        }
-
-        .user-info {
-            padding: 12px;
-            background-color: var(--sidebar-bg);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .avatar-frame {
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3) border-box;
-            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-        }
-
-        .user-details {
-            flex: 1;
-        }
-
-        .username {
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .badge {
-            font-size: 12px;
-            padding: 2px 4px;
-            border-radius: 4px;
-            background: #5865F2;
-        }
-
-        .badge.owner { background: #f04747; }
-        .badge.admin { background: #ed4245; }
-        .badge.moderator { background: #faa61a; }
-        .badge.booster { background: #ff73fa; }
-        .badge.nitro { background: linear-gradient(45deg, #ff6b6b, #feca57); }
-
-        .user-status {
-            font-size: 12px;
-            color: #b9bbbe;
-        }
-
+        /* Основная область чата */
         .chat-area {
-            flex: 1;
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            background-color: var(--chat-bg);
+            background-color: var(--background-primary);
         }
 
         .chat-header {
             padding: 16px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
             display: flex;
             align-items: center;
-            gap: 8px;
         }
 
-        .channel-title {
-            font-weight: 600;
-            font-size: 16px;
+        .chat-header-icon {
+            margin-right: 8px;
+            color: var(--text-muted);
         }
 
-        .channel-topic {
-            color: #b9bbbe;
-            font-size: 14px;
-            margin-left: 8px;
-        }
-
-        .chat-toolbar {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-left: auto;
-        }
-
-        .toolbar-btn {
-            color: #b9bbbe;
-            cursor: pointer;
-        }
-
-        .toolbar-btn:hover {
-            color: var(--text-color);
-        }
-
-        .messages {
-            flex: 1;
+        .chat-messages {
+            flex-grow: 1;
             padding: 16px;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
         }
 
         .message {
-            margin-bottom: 16px;
             display: flex;
+            margin-bottom: 16px;
             padding: 4px 16px;
-            position: relative;
         }
 
         .message:hover {
@@ -310,1183 +188,861 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--primary-color);
             margin-right: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
             cursor: pointer;
-            position: relative;
         }
 
         .message-content {
-            flex: 1;
+            flex-grow: 1;
         }
 
         .message-header {
             display: flex;
             align-items: center;
             margin-bottom: 4px;
-            gap: 8px;
         }
 
         .message-author {
             font-weight: 500;
-            color: var(--text-color);
+            margin-right: 8px;
             cursor: pointer;
         }
 
-        .message-author:hover {
-            text-decoration: underline;
-        }
-
-        .message-time {
-            color: #72767d;
+        .message-timestamp {
+            color: var(--text-muted);
             font-size: 12px;
         }
 
         .message-text {
-            color: #dcddde;
             line-height: 1.4;
-            word-wrap: break-word;
         }
 
-        .message-actions {
-            position: absolute;
-            right: 16px;
-            top: -8px;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            display: none;
-            gap: 4px;
-            padding: 4px;
-        }
-
-        .message:hover .message-actions {
-            display: flex;
-        }
-
-        .action-btn {
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            color: #b9bbbe;
-            font-size: 12px;
-        }
-
-        .action-btn:hover {
-            background: var(--hover-color);
-            color: var(--text-color);
-        }
-
-        .message-input-container {
+        .chat-input-container {
             padding: 16px;
         }
 
-        .message-input-wrapper {
-            background: var(--input-bg);
-            border-radius: 8px;
-            padding: 8px 16px;
-        }
-
-        .message-input {
+        .chat-input {
             width: 100%;
-            background: transparent;
+            background-color: var(--background-tertiary);
             border: none;
-            color: var(--text-color);
-            font-size: 14px;
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-normal);
             resize: none;
-            min-height: 20px;
-            max-height: 150px;
-        }
-
-        .message-input:focus {
             outline: none;
         }
 
-        .input-actions {
+        /* Панель участников */
+        .members-sidebar {
+            width: 240px;
+            background-color: var(--background-secondary);
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .members-header {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .member {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-top: 8px;
-        }
-
-        .action-icons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .icon-btn {
-            color: #b9bbbe;
-            cursor: pointer;
+            margin-bottom: 8px;
             padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
         }
 
-        .icon-btn:hover {
-            color: var(--text-color);
+        .member:hover {
+            background-color: rgba(79, 84, 92, 0.32);
         }
 
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 12px;
+            position: relative;
+        }
+
+        .member-status {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--background-secondary);
+        }
+
+        .status-online {
+            background-color: var(--online);
+        }
+
+        .status-idle {
+            background-color: var(--idle);
+        }
+
+        .status-dnd {
+            background-color: var(--dnd);
+        }
+
+        .member-name {
+            font-weight: 500;
+        }
+
+        /* Модальные окна */
         .modal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
+            background-color: rgba(0, 0, 0, 0.85);
             z-index: 1000;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-content {
-            background: var(--bg-color);
+            background-color: var(--background-secondary);
             border-radius: 8px;
-            width: 90%;
-            max-width: 440px;
-            max-height: 90vh;
-            overflow-y: auto;
+            width: 440px;
+            max-width: 90vw;
+            padding: 24px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.24);
         }
 
         .modal-header {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
             text-align: center;
-            position: relative;
+            margin-bottom: 20px;
         }
 
         .modal-title {
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .modal-close {
-            position: absolute;
-            right: 16px;
-            top: 16px;
-            color: #b9bbbe;
-            cursor: pointer;
-        }
-
-        .modal-close:hover {
-            color: var(--text-color);
-        }
-
-        .modal-body {
-            padding: 16px;
-        }
-
-        .profile-banner {
-            height: 100px;
-            background: linear-gradient(45deg, #5865F2, #EB459E);
-            border-radius: 8px 8px 0 0;
-            position: relative;
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            border: 6px solid var(--bg-color);
-            position: absolute;
-            bottom: -40px;
-            left: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .profile-info {
-            margin-top: 48px;
-            padding: 16px;
-        }
-
-        .profile-username {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .profile-badges {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 16px;
-        }
-
-        .profile-bio {
-            color: #b9bbbe;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .friends-tab {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .friends-header {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .friends-search {
-            background: var(--input-bg);
-            border: none;
-            border-radius: 4px;
-            padding: 8px;
-            color: var(--text-color);
-            width: 100%;
-        }
-
-        .friends-list {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .friend-item {
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-        }
-
-        .friend-item:hover {
-            background: var(--hover-color);
-        }
-
-        .friend-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .friend-info {
-            flex: 1;
-        }
-
-        .friend-name {
-            font-weight: 500;
-        }
-
-        .friend-status {
-            font-size: 12px;
-            color: #b9bbbe;
-        }
-
-        .friend-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .shop-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            padding: 16px;
-        }
-
-        .shop-item {
-            background: var(--sidebar-bg);
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .shop-item:hover {
-            transform: translateY(-2px);
-        }
-
-        .item-price {
-            color: #faa61a;
-            font-weight: 600;
-            margin-top: 8px;
-        }
-
-        .server-creation {
-            text-align: center;
-            padding: 32px;
-        }
-
-        .server-avatar-upload {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: var(--hover-color);
-            margin: 0 auto 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-            text-align: left;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 4px;
-            color: #b9bbbe;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 8px;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            color: var(--text-color);
-        }
-
-        .auth-container {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(135deg, #5865F2, #8B5CF6);
-        }
-
-        .auth-form {
-            background: var(--bg-color);
-            padding: 32px;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 480px;
-        }
-
-        .auth-header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .auth-title {
             font-size: 24px;
             font-weight: 700;
             margin-bottom: 8px;
         }
 
-        .auth-subtitle {
-            color: #b9bbbe;
+        .modal-subtitle {
+            color: var(--text-muted);
+            font-size: 16px;
         }
 
-        .date-selectors {
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: var(--background-tertiary);
+            border: none;
+            border-radius: 3px;
+            padding: 10px;
+            color: var(--text-normal);
+            outline: none;
+        }
+
+        .form-input:focus {
+            border: 1px solid var(--brand);
+        }
+
+        .btn {
+            background-color: var(--brand);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 10px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.17s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--brand-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--background-tertiary);
+            color: var(--text-normal);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(79, 84, 92, 0.4);
+        }
+
+        .link {
+            color: var(--brand);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background-color: var(--background-secondary);
+            border-top: 1px solid rgba(0, 0, 0, 0.2);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .user-info {
+            flex-grow: 1;
+        }
+
+        .username {
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .user-tag {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .user-controls {
             display: flex;
             gap: 8px;
-            margin-bottom: 16px;
         }
 
-        .date-select {
-            flex: 1;
-        }
-
-        .date-select select {
-            width: 100%;
-            padding: 8px;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
+        .control-icon {
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
             border-radius: 4px;
-            color: var(--text-color);
         }
 
+        .control-icon:hover {
+            background-color: rgba(79, 84, 92, 0.32);
+            color: var(--text-normal);
+        }
+
+        /* Адаптивность */
         @media (max-width: 1200px) {
-            .channels-sidebar {
-                width: 200px;
+            .members-sidebar {
+                display: none;
             }
         }
 
         @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-            
-            .server-sidebar {
-                width: 100%;
-                height: 60px;
-                flex-direction: row;
-                overflow-x: auto;
-            }
-            
             .channels-sidebar {
-                width: 100%;
-                height: 200px;
+                display: none;
             }
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            transition: background-color 0.2s;
-            margin-bottom: 8px;
-        }
-
-        .btn:hover {
-            background-color: #4752c4;
-        }
-
-        .btn:disabled {
-            background-color: #7b83eb;
-            cursor: not-allowed;
-        }
-
-        .error {
-            color: #ff6b6b;
-            text-align: center;
-            margin-top: 8px;
-            font-size: 14px;
-        }
-
-        .success {
-            color: #23a55a;
-            text-align: center;
-            margin-top: 8px;
-            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <!-- Auth Container -->
-    <div class="auth-container" id="authContainer">
-        <div class="auth-form">
-            <div class="auth-header">
-                <h1 class="auth-title">Добро пожаловать в Discord!</h1>
-                <p class="auth-subtitle">Мы так рады видеть вас снова!</p>
-            </div>
-            
-            <form id="loginForm">
-                <div class="form-group">
-                    <label class="form-label">EMAIL ИЛИ НОМЕР ТЕЛЕФОНА</label>
-                    <input type="text" class="form-input" id="loginEmail" required placeholder="Введите email">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">ПАРОЛЬ</label>
-                    <input type="password" class="form-input" id="loginPassword" required placeholder="Введите пароль">
-                </div>
-                <button type="submit" class="btn" id="loginBtn">
-                    Войти
-                </button>
-                <div class="error" id="loginError"></div>
-                
-                <div style="text-align: center; margin-top: 16px;">
-                    <a href="#" style="color: #00aff4; text-decoration: none; font-size: 14px;">Забыли пароль?</a>
-                </div>
-            </form>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <span style="color: #72767d; font-size: 14px;">Нужна учетная запись? </span>
-                <a href="#" id="registerLink" style="color: #00aff4; text-decoration: none; font-size: 14px;">Зарегистрироваться</a>
-            </div>
-        </div>
+    <!-- Боковая панель серверов -->
+    <div class="servers-sidebar" id="servers-sidebar">
+        <!-- Серверы будут добавляться динамически -->
+        <div class="server-icon add-server" id="add-server-btn">+</div>
     </div>
 
-    <!-- Register Modal -->
-    <div class="modal" id="registerModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Создать учетную запись</h2>
-                <div class="modal-close" id="closeRegister">&times;</div>
-            </div>
-            <div class="modal-body">
-                <form id="registerForm">
-                    <div class="form-group">
-                        <label class="form-label">ИМЯ ПОЛЬЗОВАТЕЛЯ</label>
-                        <input type="text" class="form-input" id="registerUsername" required placeholder="Введите имя пользователя">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">EMAIL</label>
-                        <input type="email" class="form-input" id="registerEmail" required placeholder="Введите email">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">ПАРОЛЬ</label>
-                        <input type="password" class="form-input" id="registerPassword" required placeholder="Введите пароль">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">ДАТА РОЖДЕНИЯ</label>
-                        <div class="date-selectors">
-                            <div class="date-select">
-                                <select id="birthDay" class="form-input" required>
-                                    <option value="">День</option>
-                                </select>
-                            </div>
-                            <div class="date-select">
-                                <select id="birthMonth" class="form-input" required>
-                                    <option value="">Месяц</option>
-                                </select>
-                            </div>
-                            <div class="date-select">
-                                <select id="birthYear" class="form-input" required>
-                                    <option value="">Год</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn" id="registerBtn">
-                        Создать аккаунт
-                    </button>
-                    <div class="error" id="registerError"></div>
-                </form>
-            </div>
+    <!-- Панель каналов -->
+    <div class="channels-sidebar">
+        <div class="server-header">
+            <span id="current-server-name">Название сервера</span>
+            <span>▼</span>
         </div>
-    </div>
-
-    <!-- Database Setup Modal -->
-    <div class="modal" id="dbSetupModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Настройка базы данных</h2>
-            </div>
-            <div class="modal-body">
-                <p>Для работы приложения необходимо создать таблицы в базе данных.</p>
-                <button class="btn" id="setupDbBtn">Создать таблицы</button>
-                <div class="error" id="dbSetupError"></div>
-                <div class="success" id="dbSetupSuccess"></div>
-            </div>
+        <div class="channels-list" id="channels-list">
+            <!-- Каналы будут добавляться динамически -->
         </div>
-    </div>
-
-    <!-- Main App -->
-    <div class="container" id="appContainer" style="display: none;">
-        <!-- Server Sidebar -->
-        <div class="server-sidebar">
-            <div class="server-icon active" data-server="home">
-                <i class="fas fa-home"></i>
-            </div>
-            
-            <div class="server-separator"></div>
-            
-            <div class="server-icon" data-server="gaming">
-                <i class="fas fa-gamepad"></i>
-            </div>
-            
-            <div class="server-icon" data-server="music">
-                <i class="fas fa-music"></i>
-            </div>
-            
-            <div class="server-icon" data-server="study">
-                <i class="fas fa-graduation-cap"></i>
-            </div>
-            
-            <div class="server-separator"></div>
-            
-            <div class="server-icon add-server">
-                <i class="fas fa-plus"></i>
-            </div>
-            
-            <div class="server-icon explore-servers">
-                <i class="fas fa-compass"></i>
-            </div>
-        </div>
-
-        <!-- Channels Sidebar -->
-        <div class="channels-sidebar">
-            <div class="server-header">
-                <div class="server-name">Сервер геймеров</div>
-                <i class="fas fa-chevron-down"></i>
-            </div>
-            
-            <div class="channels-list">
-                <div class="channel-category">
-                    <div class="category-header">
-                        <span>ТЕКСТОВЫЕ КАНАЛЫ</span>
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <div class="channel active">
-                        <i class="fas fa-hashtag channel-icon"></i>
-                        общий
-                    </div>
-                    <div class="channel">
-                        <i class="fas fa-hashtag channel-icon"></i>
-                        игры
-                    </div>
-                    <div class="channel">
-                        <i class="fas fa-hashtag channel-icon"></i>
-                        мемы
-                    </div>
-                </div>
-                
-                <div class="channel-category">
-                    <div class="category-header">
-                        <span>ГОЛОСОВЫЕ КАНАЛЫ</span>
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <div class="channel voice-channel">
-                        <i class="fas fa-phone-alt channel-icon"></i>
-                        Общий войс
-                    </div>
-                    <div class="channel voice-channel">
-                        <i class="fas fa-phone-alt channel-icon"></i>
-                        Игровой войс
-                    </div>
-                </div>
-
-                <div class="channel-category">
-                    <div class="category-header">
-                        <span>ПРЯМЫЕ СООБЩЕНИЯ</span>
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <div class="channel">
-                        <i class="fas fa-user-friends channel-icon"></i>
-                        Друзья
-                    </div>
-                    <div class="channel">
-                        <i class="fas fa-shopping-bag channel-icon"></i>
-                        Магазин Nitro
-                    </div>
-                </div>
-            </div>
-            
+        <div class="user-profile">
+            <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Аватар" class="user-avatar" id="user-avatar">
             <div class="user-info">
-                <div class="user-avatar" id="userProfileBtn">
-                    <div class="avatar-frame"></div>
-                    U
-                </div>
-                <div class="user-details">
-                    <div class="username">
-                        Username
-                        <span class="badge nitro">NITRO</span>
-                    </div>
-                    <div class="user-status">#0001</div>
-                </div>
-                <div class="user-actions">
-                    <i class="fas fa-microphone icon-btn"></i>
-                    <i class="fas fa-headphones icon-btn"></i>
-                    <i class="fas fa-cog icon-btn"></i>
-                </div>
+                <div class="username" id="username">Имя пользователя</div>
+                <div class="user-tag" id="user-tag">#0000</div>
+            </div>
+            <div class="user-controls">
+                <div class="control-icon">🔈</div>
+                <div class="control-icon">🔊</div>
+                <div class="control-icon">⚙️</div>
             </div>
         </div>
+    </div>
 
-        <!-- Chat Area -->
-        <div class="chat-area">
-            <div class="chat-header">
-                <i class="fas fa-hashtag"></i>
-                <div class="channel-title">общий</div>
-                <div class="channel-topic">Обсуждение любых тем</div>
-                <div class="chat-toolbar">
-                    <i class="fas fa-bell toolbar-btn"></i>
-                    <i class="fas fa-pin toolbar-btn"></i>
-                    <i class="fas fa-user-friends toolbar-btn"></i>
-                    <input type="text" placeholder="Поиск" style="background: var(--input-bg); border: none; border-radius: 4px; padding: 4px 8px; color: var(--text-color);">
-                    <i class="fas fa-inbox toolbar-btn"></i>
-                    <i class="fas fa-question-circle toolbar-btn"></i>
-                </div>
+    <!-- Основная область чата -->
+    <div class="chat-area">
+        <div class="chat-header">
+            <div class="chat-header-icon">#</div>
+            <span id="current-channel-name">общий</span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- Сообщения будут добавляться динамически -->
+        </div>
+        <div class="chat-input-container">
+            <textarea class="chat-input" id="chat-input" placeholder="Написать сообщение в #общий" rows="1"></textarea>
+        </div>
+    </div>
+
+    <!-- Панель участников -->
+    <div class="members-sidebar">
+        <div class="members-header">УЧАСТНИКИ — <span id="members-count">0</span></div>
+        <div id="members-list">
+            <!-- Участники будут добавляться динамически -->
+        </div>
+    </div>
+
+    <!-- Модальное окно входа -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">С возвращением!</div>
+                <div class="modal-subtitle">Мы так рады видеть вас снова!</div>
             </div>
-            
-            <div class="messages" id="messagesContainer">
-                <div class="welcome-message" style="text-align: center; padding: 20px; color: var(--text-color); opacity: 0.7;">
-                    <p>Добро пожаловать в #общий! 💬</p>
-                    <p>Это начало канала #общий</p>
-                </div>
+            <div class="form-group">
+                <label class="form-label">ЭЛЕКТРОННАЯ ПОЧТА</label>
+                <input type="email" class="form-input" id="login-email" placeholder="example@mail.com">
             </div>
-            
-            <div class="message-input-container">
-                <div class="message-input-wrapper">
-                    <textarea class="message-input" id="messageInput" placeholder="Написать сообщение в #общий" disabled></textarea>
-                </div>
-                <div class="input-actions">
-                    <div class="action-icons">
-                        <i class="fas fa-plus-circle icon-btn"></i>
-                        <i class="fas fa-gift icon-btn"></i>
-                        <i class="fas fa-gripfire icon-btn"></i>
-                        <i class="fas fa-smile icon-btn" id="emojiBtn"></i>
-                    </div>
-                    <button class="btn" id="sendBtn" disabled style="padding: 8px 16px;">Отправить</button>
-                </div>
+            <div class="form-group">
+                <label class="form-label">ПАРОЛЬ</label>
+                <input type="password" class="form-input" id="login-password" placeholder="••••••••••••">
             </div>
+            <button class="btn" id="login-btn">Войти</button>
+            <div style="margin-top: 8px; font-size: 14px;">
+                Нужна учетная запись? <span class="link" id="register-link">Зарегистрироваться</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно регистрации -->
+    <div class="modal" id="register-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Создайте учетную запись</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ЭЛЕКТРОННАЯ ПОЧТА</label>
+                <input type="email" class="form-input" id="register-email" placeholder="example@mail.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ИМЯ ПОЛЬЗОВАТЕЛЯ</label>
+                <input type="text" class="form-input" id="register-username" placeholder="Имя пользователя">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ПАРОЛЬ</label>
+                <input type="password" class="form-input" id="register-password" placeholder="••••••••••••">
+            </div>
+            <button class="btn" id="register-btn">Продолжить</button>
+            <div style="margin-top: 8px; font-size: 14px;">
+                Уже есть учетная запись? <span class="link" id="login-link">Войти</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания сервера -->
+    <div class="modal" id="create-server-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Настройте свой сервер</div>
+                <div class="modal-subtitle">Придайте своему новому серверу индивидуальность с помощью названия и иконки.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">НАЗВАНИЕ СЕРВЕРА</label>
+                <input type="text" class="form-input" id="server-name" placeholder="Введите название сервера">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ИКОНКА СЕРВЕРА (URL)</label>
+                <input type="text" class="form-input" id="server-icon" placeholder="https://example.com/icon.png">
+            </div>
+            <button class="btn" id="create-server-btn">Создать</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно профиля -->
+    <div class="modal" id="profile-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Мой профиль</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ИМЯ ПОЛЬЗОВАТЕЛЯ</label>
+                <input type="text" class="form-input" id="profile-username" placeholder="Имя пользователя">
+            </div>
+            <div class="form-group">
+                <label class="form-label">АВАТАР (URL)</label>
+                <input type="text" class="form-input" id="profile-avatar" placeholder="https://example.com/avatar.png">
+            </div>
+            <div class="form-group">
+                <label class="form-label">СТАТУС</label>
+                <select class="form-input" id="profile-status">
+                    <option value="online">В сети</option>
+                    <option value="idle">Не активен</option>
+                    <option value="dnd">Не беспокоить</option>
+                </select>
+            </div>
+            <button class="btn" id="save-profile-btn">Сохранить</button>
         </div>
     </div>
 
     <script>
-        // 🔧 КОНФИГУРАЦИЯ - ВАШИ ДАННЫЕ
-        const SUPABASE_URL = 'https://xivugoluqezkgsrdlliv.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpdnVnb2x1cWV6a2dzcmRsbGl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NDk5MDIsImV4cCI6MjA3NzIyNTkwMn0.sV8HMLK8VyaJJZVYToQrR26cAosaTri5dvZOBmtjFOk';
-
         // Инициализация Supabase
+        const SUPABASE_URL = 'https://your-project.supabase.co';
+        const SUPABASE_ANON_KEY = 'your-anon-key';
+        
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        class DiscordClone {
-            constructor() {
-                this.currentUser = null;
-                this.currentServer = 'home';
-                this.currentChannel = 'general';
-                this.servers = {};
-                this.friends = [];
-                this.initialize();
+        // Состояние приложения
+        let currentUser = null;
+        let currentServer = null;
+        let currentChannel = null;
+        let servers = [];
+        let friends = [];
+
+        // DOM элементы
+        const loginModal = document.getElementById('login-modal');
+        const registerModal = document.getElementById('register-modal');
+        const createServerModal = document.getElementById('create-server-modal');
+        const profileModal = document.getElementById('profile-modal');
+        const serversSidebar = document.getElementById('servers-sidebar');
+        const channelsList = document.getElementById('channels-list');
+        const chatMessages = document.getElementById('chat-messages');
+        const membersList = document.getElementById('members-list');
+        const chatInput = document.getElementById('chat-input');
+
+        // Инициализация приложения
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Проверяем, авторизован ли пользователь
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                currentUser = session.user;
+                await loadUserData();
+                await loadServers();
+                showMainInterface();
+            } else {
+                showLoginModal();
             }
 
-            async initialize() {
-                this.populateDateSelectors();
-                this.bindEvents();
-                await this.checkDatabase();
-                await this.checkAuth();
-            }
+            // Настройка обработчиков событий
+            setupEventListeners();
+        });
 
-            async checkDatabase() {
-                // Проверяем существование таблиц
-                try {
-                    const { data, error } = await supabase
-                        .from('users')
-                        .select('*')
-                        .limit(1);
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Модальные окна
+            document.getElementById('login-link').addEventListener('click', () => {
+                loginModal.style.display = 'none';
+                registerModal.style.display = 'flex';
+            });
 
-                    if (error && error.code === 'PGRST116') {
-                        // Таблицы не существуют, показываем модальное окно настройки
-                        this.showDatabaseSetupModal();
-                    }
-                } catch (error) {
-                    this.showDatabaseSetupModal();
-                }
-            }
+            document.getElementById('register-link').addEventListener('click', () => {
+                registerModal.style.display = 'none';
+                loginModal.style.display = 'flex';
+            });
 
-            showDatabaseSetupModal() {
-                document.getElementById('dbSetupModal').style.display = 'flex';
-            }
+            document.getElementById('login-btn').addEventListener('click', login);
+            document.getElementById('register-btn').addEventListener('click', register);
+            document.getElementById('add-server-btn').addEventListener('click', () => {
+                createServerModal.style.display = 'flex';
+            });
+            document.getElementById('create-server-btn').addEventListener('click', createServer);
+            document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
 
-            hideDatabaseSetupModal() {
-                document.getElementById('dbSetupModal').style.display = 'none';
-            }
+            // Открытие профиля при клике на аватар или имя пользователя
+            document.getElementById('user-avatar').addEventListener('click', () => {
+                loadProfileData();
+                profileModal.style.display = 'flex';
+            });
+            document.getElementById('username').addEventListener('click', () => {
+                loadProfileData();
+                profileModal.style.display = 'flex';
+            });
 
-            async setupDatabase() {
-                const setupBtn = document.getElementById('setupDbBtn');
-                setupBtn.disabled = true;
-                setupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание таблиц...';
-
-                try {
-                    // SQL для создания таблиц
-                    const sqlCommands = [
-                        `CREATE TABLE IF NOT EXISTS users (
-                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                            username VARCHAR(50) UNIQUE NOT NULL,
-                            email VARCHAR(255) UNIQUE NOT NULL,
-                            password VARCHAR(255),
-                            avatar VARCHAR(10) DEFAULT 'U',
-                            badges TEXT[] DEFAULT '{}',
-                            nitro BOOLEAN DEFAULT false,
-                            balance INTEGER DEFAULT 0,
-                            birth_date DATE,
-                            created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-                        )`,
-
-                        `CREATE TABLE IF NOT EXISTS messages (
-                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                            user_id UUID REFERENCES users(id),
-                            channel VARCHAR(50) NOT NULL,
-                            server VARCHAR(50) NOT NULL,
-                            content TEXT NOT NULL,
-                            username VARCHAR(50) NOT NULL,
-                            avatar VARCHAR(10) NOT NULL,
-                            created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-                        )`,
-
-                        `CREATE TABLE IF NOT EXISTS servers (
-                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                            name VARCHAR(100) NOT NULL,
-                            owner_id UUID REFERENCES users(id),
-                            icon VARCHAR(10),
-                            created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-                        )`,
-
-                        `CREATE TABLE IF NOT EXISTS friends (
-                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                            user_id UUID REFERENCES users(id),
-                            friend_id UUID REFERENCES users(id),
-                            status VARCHAR(20) DEFAULT 'pending',
-                            created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-                            UNIQUE(user_id, friend_id)
-                        )`,
-
-                        `ALTER TABLE users ENABLE ROW LEVEL SECURITY`,
-                        `ALTER TABLE messages ENABLE ROW LEVEL SECURITY`,
-                        `ALTER TABLE servers ENABLE ROW LEVEL SECURITY`,
-                        `ALTER TABLE friends ENABLE ROW LEVEL SECURITY`,
-
-                        `CREATE POLICY "Users can read all profiles" ON users FOR SELECT USING (true)`,
-                        `CREATE POLICY "Users can create profiles" ON users FOR INSERT WITH CHECK (true)`,
-                        `CREATE POLICY "Anyone can read messages" ON messages FOR SELECT USING (true)`,
-                        `CREATE POLICY "Anyone can create messages" ON messages FOR INSERT WITH CHECK (true)`,
-                        `CREATE POLICY "Anyone can read servers" ON servers FOR SELECT USING (true)`,
-                        `CREATE POLICY "Users can manage own friends" ON friends FOR ALL USING (user_id = auth.uid())`
-                    ];
-
-                    // Выполняем SQL команды
-                    for (const sql of sqlCommands) {
-                        const { error } = await supabase.rpc('exec_sql', { sql_query: sql });
-                        if (error) {
-                            console.warn('SQL execution warning:', error);
-                        }
-                    }
-
-                    document.getElementById('dbSetupSuccess').textContent = '✅ Таблицы успешно созданы!';
-                    setTimeout(() => {
-                        this.hideDatabaseSetupModal();
-                    }, 2000);
-
-                } catch (error) {
-                    document.getElementById('dbSetupError').textContent = 'Ошибка создания таблиц: ' + error.message;
-                } finally {
-                    setupBtn.disabled = false;
-                    setupBtn.innerHTML = 'Создать таблицы';
-                }
-            }
-
-            populateDateSelectors() {
-                // Заполняем дни (1-31)
-                const daySelect = document.getElementById('birthDay');
-                for (let i = 1; i <= 31; i++) {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = i;
-                    daySelect.appendChild(option);
-                }
-
-                // Заполняем месяцы
-                const monthSelect = document.getElementById('birthMonth');
-                const months = [
-                    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-                    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
-                ];
-                months.forEach((month, index) => {
-                    const option = document.createElement('option');
-                    option.value = index + 1;
-                    option.textContent = month;
-                    monthSelect.appendChild(option);
-                });
-
-                // Заполняем годы (от текущего до 1900)
-                const yearSelect = document.getElementById('birthYear');
-                const currentYear = new Date().getFullYear();
-                for (let i = currentYear; i >= 1900; i--) {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = i;
-                    yearSelect.appendChild(option);
-                }
-            }
-
-            bindEvents() {
-                // Аутентификация
-                document.getElementById('loginForm').addEventListener('submit', (e) => this.handleLogin(e));
-                document.getElementById('registerLink').addEventListener('click', (e) => {
+            // Ввод сообщения
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    this.showRegisterModal();
-                });
-                document.getElementById('registerForm').addEventListener('submit', (e) => this.handleRegister(e));
-                document.getElementById('closeRegister').addEventListener('click', () => this.hideRegisterModal());
-                document.getElementById('setupDbBtn').addEventListener('click', () => this.setupDatabase());
-
-                // Навигация
-                document.querySelectorAll('.server-icon').forEach(icon => {
-                    icon.addEventListener('click', () => this.switchServer(icon.dataset.server));
-                });
-
-                document.querySelectorAll('.channel').forEach(channel => {
-                    channel.addEventListener('click', () => this.switchChannel(channel));
-                });
-
-                // Модальные окна
-                document.getElementById('userProfileBtn').addEventListener('click', () => this.showProfileModal());
-                document.querySelector('.add-server').addEventListener('click', () => this.showServerCreateModal());
-
-                // Чат
-                document.getElementById('sendBtn').addEventListener('click', () => this.sendMessage());
-                document.getElementById('messageInput').addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        this.sendMessage();
-                    }
-                });
-
-                // Закрытие модальных окон
-                document.querySelectorAll('.modal-close').forEach(closeBtn => {
-                    closeBtn.addEventListener('click', (e) => {
-                        e.target.closest('.modal').style.display = 'none';
-                    });
-                });
-
-                // Закрытие при клике вне модального окна
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.addEventListener('click', (e) => {
-                        if (e.target === modal) {
-                            modal.style.display = 'none';
-                        }
-                    });
-                });
-            }
-
-            async checkAuth() {
-                const savedUser = localStorage.getItem('discord_user');
-                if (savedUser) {
-                    this.currentUser = JSON.parse(savedUser);
-                    await this.showApp();
+                    sendMessage();
                 }
-            }
+            });
+        }
 
-            async handleLogin(e) {
-                e.preventDefault();
-                const email = document.getElementById('loginEmail').value;
-                const password = document.getElementById('loginPassword').value;
-                const loginBtn = document.getElementById('loginBtn');
+        // Функция входа
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
 
-                loginBtn.disabled = true;
-                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вход...';
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
 
-                try {
-                    // Ищем пользователя
-                    const { data: user, error } = await supabase
-                        .from('users')
-                        .select('*')
-                        .eq('email', email)
-                        .single();
-
-                    if (error || !user) {
-                        document.getElementById('loginError').textContent = 'Неверный email или пароль';
-                        return;
-                    }
-
-                    this.currentUser = user;
-                    localStorage.setItem('discord_user', JSON.stringify(this.currentUser));
-                    await this.showApp();
-
-                } catch (error) {
-                    document.getElementById('loginError').textContent = 'Ошибка входа';
-                } finally {
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = 'Войти';
-                }
-            }
-
-            showRegisterModal() {
-                document.getElementById('registerModal').style.display = 'flex';
-            }
-
-            hideRegisterModal() {
-                document.getElementById('registerModal').style.display = 'none';
-            }
-
-            async handleRegister(e) {
-                e.preventDefault();
-                const username = document.getElementById('registerUsername').value;
-                const email = document.getElementById('registerEmail').value;
-                const password = document.getElementById('registerPassword').value;
-                const day = document.getElementById('birthDay').value;
-                const month = document.getElementById('birthMonth').value;
-                const year = document.getElementById('birthYear').value;
-                const registerBtn = document.getElementById('registerBtn');
-
-                // Проверяем заполнение даты рождения
-                if (!day || !month || !year) {
-                    document.getElementById('registerError').textContent = 'Пожалуйста, выберите полную дату рождения';
-                    return;
-                }
-
-                registerBtn.disabled = true;
-                registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
-
-                try {
-                    // Проверяем существование пользователя
-                    const { data: existingUser } = await supabase
-                        .from('users')
-                        .select('id')
-                        .eq('email', email)
-                        .single();
-
-                    if (existingUser) {
-                        document.getElementById('registerError').textContent = 'Пользователь с таким email уже существует';
-                        return;
-                    }
-
-                    // Создаем пользователя (без badges и других опциональных полей)
-                    const { data: newUser, error } = await supabase
-                        .from('users')
-                        .insert([
-                            {
-                                username: username,
-                                email: email,
-                                avatar: username.charAt(0).toUpperCase(),
-                                birth_date: `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-                            }
-                        ])
-                        .select()
-                        .single();
-
-                    if (error) throw error;
-
-                    this.currentUser = newUser;
-                    localStorage.setItem('discord_user', JSON.stringify(this.currentUser));
-                    this.hideRegisterModal();
-                    await this.showApp();
-
-                } catch (error) {
-                    document.getElementById('registerError').textContent = 'Ошибка регистрации: ' + error.message;
-                } finally {
-                    registerBtn.disabled = false;
-                    registerBtn.innerHTML = 'Создать аккаунт';
-                }
-            }
-
-            async showApp() {
-                document.getElementById('authContainer').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'flex';
-                
-                // Обновляем информацию пользователя
-                document.querySelector('.username').textContent = this.currentUser.username;
-                document.querySelector('.user-avatar').textContent = this.currentUser.avatar;
-
-                // Включаем поле ввода
-                document.getElementById('messageInput').disabled = false;
-                document.getElementById('sendBtn').disabled = false;
-
-                await this.loadServers();
-                await this.loadFriends();
-                await this.setupRealtime();
-            }
-
-            async loadServers() {
-                // Загрузка серверов пользователя
-                console.log('Загрузка серверов...');
-            }
-
-            async loadFriends() {
-                // Загрузка списка друзей
-                console.log('Загрузка друзей...');
-            }
-
-            async setupRealtime() {
-                // Настройка real-time подписки
-                console.log('Настройка real-time...');
-            }
-
-            switchServer(serverId) {
-                this.currentServer = serverId;
-                document.querySelectorAll('.server-icon').forEach(icon => {
-                    icon.classList.toggle('active', icon.dataset.server === serverId);
-                });
-                this.loadServerChannels(serverId);
-            }
-
-            switchChannel(channelElement) {
-                document.querySelectorAll('.channel').forEach(ch => ch.classList.remove('active'));
-                channelElement.classList.add('active');
-                this.currentChannel = channelElement.textContent.trim();
-                document.querySelector('.channel-title').textContent = this.currentChannel;
-                this.loadChannelMessages();
-            }
-
-            async loadChannelMessages() {
-                const messagesContainer = document.getElementById('messagesContainer');
-                // Здесь будет загрузка сообщений из базы данных
-            }
-
-            async sendMessage() {
-                const messageInput = document.getElementById('messageInput');
-                const text = messageInput.value.trim();
-                
-                if (!text || !this.currentUser) return;
-
-                try {
-                    const { error } = await supabase
-                        .from('messages')
-                        .insert([
-                            {
-                                user_id: this.currentUser.id,
-                                channel: this.currentChannel,
-                                server: this.currentServer,
-                                content: text,
-                                username: this.currentUser.username,
-                                avatar: this.currentUser.avatar
-                            }
-                        ]);
-
-                    if (!error) {
-                        messageInput.value = '';
-                        // Добавляем сообщение в чат мгновенно
-                        this.addMessageToChat({
-                            username: this.currentUser.username,
-                            avatar: this.currentUser.avatar,
-                            content: text,
-                            created_at: new Date().toISOString()
-                        });
-                    }
-                } catch (error) {
-                    console.error('Ошибка отправки сообщения:', error);
-                }
-            }
-
-            addMessageToChat(messageData) {
-                const messagesContainer = document.getElementById('messagesContainer');
-                
-                // Убираем welcome сообщение если есть
-                const welcomeMsg = messagesContainer.querySelector('.welcome-message');
-                if (welcomeMsg) {
-                    messagesContainer.innerHTML = '';
-                }
-
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message';
-                messageElement.innerHTML = `
-                    <div class="message-avatar">
-                        ${messageData.avatar}
-                    </div>
-                    <div class="message-content">
-                        <div class="message-header">
-                            <span class="message-author">${messageData.username}</span>
-                            <span class="message-time">${new Date(messageData.created_at).toLocaleTimeString()}</span>
-                        </div>
-                        <div class="message-text">${messageData.content}</div>
-                    </div>
-                    <div class="message-actions">
-                        <div class="action-btn">👍</div>
-                        <div class="action-btn">👎</div>
-                        <div class="action-btn">❤️</div>
-                    </div>
-                `;
-                
-                messagesContainer.appendChild(messageElement);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-
-            showProfileModal() {
-                // Показываем профиль пользователя
-                alert('Профиль пользователя: ' + this.currentUser.username);
-            }
-
-            showServerCreateModal() {
-                // Показываем создание сервера
-                alert('Создание нового сервера');
+            if (error) {
+                alert('Ошибка входа: ' + error.message);
+            } else {
+                currentUser = data.user;
+                await loadUserData();
+                await loadServers();
+                showMainInterface();
+                loginModal.style.display = 'none';
             }
         }
 
-        // Инициализация приложения
-        document.addEventListener('DOMContentLoaded', () => {
-            new DiscordClone();
-        });
-    </script>
-</body>
-</html>
+        // Функция регистрации
+        async function register() {
+            const email = document.getElementById('register-email').value;
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        username,
+                        avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
+                        status: 'online'
+                    }
+                }
+            });
+
+            if (error) {
+                alert('Ошибка регистрации: ' + error.message);
+            } else {
+                alert('Регистрация успешна! Проверьте вашу почту для подтверждения.');
+                registerModal.style.display = 'none';
+                loginModal.style.display = 'flex';
+            }
+        }
+
+        // Загрузка данных пользователя
+        async function loadUserData() {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (data) {
+                document.getElementById('username').textContent = data.username;
+                document.getElementById('user-tag').textContent = '#' + data.discriminator;
+                document.getElementById('user-avatar').src = data.avatar;
+            }
+        }
+
+        // Загрузка серверов
+        async function loadServers() {
+            const { data, error } = await supabase
+                .from('servers')
+                .select('*')
+                .eq('owner_id', currentUser.id);
+
+            if (data) {
+                servers = data;
+                renderServers();
+                
+                if (servers.length > 0) {
+                    selectServer(servers[0]);
+                }
+            }
+        }
+
+        // Отображение серверов
+        function renderServers() {
+            serversSidebar.innerHTML = '';
+            
+            servers.forEach(server => {
+                const serverElement = document.createElement('div');
+                serverElement.className = 'server-icon';
+                serverElement.innerHTML = server.icon_url ? 
+                    `<img src="${server.icon_url}" alt="${server.name}">` : 
+                    server.name.charAt(0).toUpperCase();
+                
+                serverElement.addEventListener('click', () => selectServer(server));
+                serversSidebar.appendChild(serverElement);
+            });
+            
+            // Добавляем кнопку создания сервера в конец
+            const addServerBtn = document.createElement('div');
+            addServerBtn.className = 'server-icon add-server';
+            addServerBtn.id = 'add-server-btn';
+            addServerBtn.textContent = '+';
+            addServerBtn.addEventListener('click', () => {
+                createServerModal.style.display = 'flex';
+            });
+            serversSidebar.appendChild(addServerBtn);
+        }
+
+        // Выбор сервера
+        async function selectServer(server) {
+            currentServer = server;
+            document.getElementById('current-server-name').textContent = server.name;
+            
+            // Загрузка каналов сервера
+            const { data, error } = await supabase
+                .from('channels')
+                .select('*')
+                .eq('server_id', server.id);
+            
+            if (data) {
+                renderChannels(data);
+                
+                if (data.length > 0) {
+                    selectChannel(data[0]);
+                }
+            }
+            
+            // Загрузка участников сервера
+            await loadServerMembers(server.id);
+        }
+
+        // Отображение каналов
+        function renderChannels(channels) {
+            channelsList.innerHTML = '';
+            
+            // Группируем каналы по категориям
+            const categories = {};
+            channels.forEach(channel => {
+                if (!categories[channel.category]) {
+                    categories[channel.category] = [];
+                }
+                categories[channel.category].push(channel);
+            });
+            
+            // Создаем элементы для каждой категории и каналов
+            Object.keys(categories).forEach(category => {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'channel-category';
+                
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'category-header';
+                categoryHeader.innerHTML = `
+                    <span>${category}</span>
+                    <span>+</span>
+                `;
+                categoryElement.appendChild(categoryHeader);
+                
+                categories[category].forEach(channel => {
+                    const channelElement = document.createElement('div');
+                    channelElement.className = 'channel';
+                    channelElement.innerHTML = `
+                        <span class="channel-icon">#</span>
+                        <span>${channel.name}</span>
+                    `;
+                    channelElement.addEventListener('click', () => selectChannel(channel));
+                    categoryElement.appendChild(channelElement);
+                });
+                
+                channelsList.appendChild(categoryElement);
+            });
+        }
+
+        // Выбор канала
+        async function selectChannel(channel) {
+            currentChannel = channel;
+            document.getElementById('current-channel-name').textContent = channel.name;
+            document.getElementById('chat-input').placeholder = `Написать сообщение в #${channel.name}`;
+            
+            // Загрузка сообщений канала
+            const { data, error } = await supabase
+                .from('messages')
+                .select('*, profiles(username, avatar)')
+                .eq('channel_id', channel.id)
+                .order('created_at', { ascending: true });
+            
+            if (data) {
+                renderMessages(data);
+            }
+        }
+
+        // Отображение сообщений
+        function renderMessages(messages) {
+            chatMessages.innerHTML = '';
+            
+            messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message';
+                messageElement.innerHTML = `
+                    <img src="${message.profiles.avatar}" alt="Аватар" class="message-avatar">
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-author">${message.profiles.username}</span>
+                            <span class="message-timestamp">${formatTimestamp(message.created_at)}</span>
+                        </div>
+                        <div class="message-text">${message.content}</div>
+                    </div>
+                `;
+                chatMessages.appendChild(messageElement);
+            });
+            
+            // Прокрутка вниз
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Загрузка участников сервера
+        async function loadServerMembers(serverId) {
+            const { data, error } = await supabase
+                .from('server_members')
+                .select('profiles(username, avatar, status)')
+                .eq('server_id', serverId);
+            
+            if (data) {
+                renderMembers(data.map(item => item.profiles));
+            }
+        }
+
+        // Отображение участников
+        function renderMembers(members) {
+            membersList.innerHTML = '';
+            document.getElementById('members-count').textContent = members.length;
+            
+            members.forEach(member => {
+                const memberElement = document.createElement('div');
+                memberElement.className = 'member';
+                memberElement.innerHTML = `
+                    <div class="member-avatar">
+                        <img src="${member.avatar}" alt="Аватар">
+                        <div class="member-status status-${member.status}"></div>
+                    </div>
+                    <div class="member-name">${member.username}</div>
+                `;
+                membersList.appendChild(memberElement);
+            });
+        }
+
+        // Создание сервера
+        async function createServer() {
+            const name = document.getElementById('server-name').value;
+            const iconUrl = document.getElementById('server-icon').value;
+            
+            const { data, error } = await supabase
+                .from('servers')
+                .insert([
+                    {
+                        name,
+                        icon_url: iconUrl,
+                        owner_id: currentUser.id
+                    }
+                ])
+                .select();
+            
+            if (error) {
+                alert('Ошибка создания сервера: ' + error.message);
+            } else {
+                createServerModal.style.display = 'none';
+                await loadServers();
+                
+                // Создаем общий канал для нового сервера
+                await supabase
+                    .from('channels')
+                    .insert([
+                        {
+                            name: 'общий',
+                            server_id: data[0].id,
+                            category: 'ТЕКСТОВЫЕ КАНАЛЫ'
+                        }
+                    ]);
+            }
+        }
+
+        // Отправка сообщения
+        async function sendMessage() {
+            const content = chatInput.value.trim();
+            
+            if (!content || !currentChannel) return;
+            
+            const { data, error } = await supabase
+                .from('messages')
+                .insert([
+                    {
+                        content,
+                        channel_id: currentChannel.id,
+                        author_id: currentUser.id
+                    }
+                ])
+                .select();
+            
+            if (error) {
+                alert('Ошибка отправки сообщения: ' + error.message);
+            } else {
+                chatInput.value = '';
+                // Обновляем сообщения
+                await selectChannel(currentChannel);
+            }
+        }
+
+        // Загрузка данных профиля
+        async function loadProfileData() {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (data) {
+                document.getElementById('profile-username').value = data.username;
+                document.getElementById('profile-avatar').value = data.avatar;
+                document.getElementById('profile-status').value = data.status;
+            }
+        }
+
+        // Сохранение профиля
+        async function saveProfile() {
+            const username = document.getElementById('profile-username').value;
+            const avatar = document.getElementById('profile-avatar').value;
+            const status = document.getElementById('profile-status').value;
+            
+            const { data, error } = await supabase
+                .from('profiles')
+                .update({
+                    username,
+                    avatar,
+                    status
+                })
+                .eq('id', currentUser.id);
+            
+            if (error) {
+                alert('Ошибка сохранения профиля: ' + error.message);
+            } else {
+                profileModal.style.display = 'none';
+                await loadUserData();
+            }
+        }
+
+        // Вспомогательные функции
+        function showLoginModal() {
+            loginModal.style.display = 'flex';
+        }
+
+        function showMainInterface() {
+            loginModal.style.display = 'none';
+            registerModal.style.display = 'none';
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Имитация работы с друзьями (для демонстрации)
+        async function addFriend(friendId) {
+            const { data, error } = await supabase
+                .from('friends
