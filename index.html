@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ВСТАВЬТЕ ВЕСЬ CSS СТИЛЬ ИЗ ПРЕДЫДУЩЕГО КОДА */
         * {
             margin: 0;
             padding: 0;
@@ -49,6 +48,18 @@
             --input-bg: #484c52;
             --border-color: #40444b;
             --hover-color: #3a3d42;
+        }
+
+        .theme-black {
+            --primary-color: #5865F2;
+            --text-color: #ffffff;
+            --bg-color: #0f0f0f;
+            --sidebar-bg: #1a1a1a;
+            --chat-bg: #0f0f0f;
+            --message-bg: #1a1a1a;
+            --input-bg: #1a1a1a;
+            --border-color: #2a2a2a;
+            --hover-color: #2a2a2a;
         }
 
         body {
@@ -527,6 +538,19 @@
             opacity: 0.7;
         }
 
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 1002;
+        }
+
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -555,6 +579,11 @@
     <!-- Статус соединения -->
     <div class="connection-status status-online" id="connectionStatus">
         <i class="fas fa-wifi"></i> <span id="statusText">Подключение...</span>
+    </div>
+
+    <!-- Отладочная информация -->
+    <div class="debug-info" id="debugInfo">
+        <div>🔍 Отладка подключения...</div>
     </div>
 
     <!-- Экран авторизации -->
@@ -698,7 +727,7 @@
     </div>
 
     <script>
-        // 🔧 КОНФИГУРАЦИЯ - ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ!
+        // 🔧 КОНФИГУРАЦИЯ - ВАШИ ДАННЫЕ
         const SUPABASE_URL = 'https://xivugoluqezkgsrdlliv.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpdnVnb2x1cWV6a2dzcmRsbGl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NDk5MDIsImV4cCI6MjA3NzIyNTkwMn0.sV8HMLK8VyaJJZVYToQrR26cAosaTri5dvZOBmtjFOk';
 
@@ -707,6 +736,14 @@
 
         // Emoji для выбора
         const EMOJIS = ['😀', '😂', '🤣', '😍', '😎', '😊', '🥰', '😘', '😜', '🤔', '😴', '🥳', '😱', '🤯', '😡', '👋', '👍', '👎', '❤️', '🔥', '⭐', '🎉', '💯'];
+
+        // Отладочная функция
+        function updateDebugInfo(message, isError = false) {
+            const debugInfo = document.getElementById('debugInfo');
+            const time = new Date().toLocaleTimeString();
+            debugInfo.innerHTML = `<div style="color: ${isError ? '#ff6b6b' : 'white'}">🕒 ${time}: ${message}</div>`;
+            console.log(`[DEBUG] ${message}`);
+        }
 
         class SupabaseMessenger {
             constructor() {
@@ -717,10 +754,38 @@
             }
 
             async initialize() {
+                updateDebugInfo('Инициализация мессенджера...');
+                
+                // Тестируем подключение к Supabase
+                await this.testConnection();
+                
                 this.bindEvents();
                 await this.checkAuth();
                 this.loadTheme();
                 this.initEmojiPicker();
+            }
+
+            async testConnection() {
+                updateDebugInfo('Тестируем подключение к Supabase...');
+                
+                try {
+                    // Пробуем получить каналы
+                    const { data, error } = await supabase
+                        .from('channels')
+                        .select('*')
+                        .limit(1);
+
+                    if (error) {
+                        updateDebugInfo(`❌ Ошибка БД: ${error.message}`, true);
+                        this.updateConnectionStatus('Ошибка подключения к БД', 'status-offline');
+                    } else {
+                        updateDebugInfo('✅ Подключение к Supabase успешно!');
+                        this.updateConnectionStatus('Подключено к Supabase', 'status-online');
+                    }
+                } catch (error) {
+                    updateDebugInfo(`❌ Ошибка подключения: ${error.message}`, true);
+                    this.updateConnectionStatus('Ошибка сети', 'status-offline');
+                }
             }
 
             bindEvents() {
@@ -764,11 +829,14 @@
             }
 
             async checkAuth() {
+                updateDebugInfo('Проверка авторизации...');
                 const savedUser = localStorage.getItem('messenger_user');
                 if (savedUser) {
                     this.currentUser = JSON.parse(savedUser);
+                    updateDebugInfo(`Найден пользователь: ${this.currentUser.username}`);
                     await this.showMessenger();
                 } else {
+                    updateDebugInfo('Пользователь не авторизован');
                     this.showAuth();
                 }
             }
@@ -798,6 +866,7 @@
 
                 loginBtn.disabled = true;
                 loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вход...';
+                updateDebugInfo(`Попытка входа для: ${email}`);
 
                 try {
                     // Ищем пользователя по email
@@ -807,16 +876,19 @@
                         .eq('email', email)
                         .single();
 
-                    if (error || !user) {
+                    if (error) {
+                        updateDebugInfo(`❌ Пользователь не найден: ${error.message}`, true);
                         document.getElementById('loginError').textContent = 'Пользователь не найден';
                         return;
                     }
 
+                    updateDebugInfo(`✅ Пользователь найден: ${user.username}`);
                     this.currentUser = user;
                     localStorage.setItem('messenger_user', JSON.stringify(this.currentUser));
                     await this.showMessenger();
 
                 } catch (error) {
+                    updateDebugInfo(`❌ Ошибка входа: ${error.message}`, true);
                     document.getElementById('loginError').textContent = 'Ошибка входа: ' + error.message;
                 } finally {
                     loginBtn.disabled = false;
@@ -838,6 +910,7 @@
 
                 registerBtn.disabled = true;
                 registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
+                updateDebugInfo(`Регистрация пользователя: ${username} (${email})`);
 
                 try {
                     // Проверяем, существует ли пользователь
@@ -848,6 +921,7 @@
                         .single();
 
                     if (existingUser) {
+                        updateDebugInfo('❌ Пользователь с таким email уже существует', true);
                         document.getElementById('registerError').textContent = 'Пользователь с таким email уже существует';
                         return;
                     }
@@ -867,13 +941,16 @@
 
                     if (error) throw error;
 
+                    updateDebugInfo(`✅ Пользователь создан: ${newUser.username}`);
                     document.getElementById('registerSuccess').textContent = 'Аккаунт создан! Теперь войдите.';
+                    
                     setTimeout(() => {
                         this.switchToLogin();
                         document.getElementById('loginEmail').value = email;
                     }, 2000);
 
                 } catch (error) {
+                    updateDebugInfo(`❌ Ошибка регистрации: ${error.message}`, true);
                     document.getElementById('registerError').textContent = 'Ошибка регистрации: ' + error.message;
                 } finally {
                     registerBtn.disabled = false;
@@ -882,6 +959,7 @@
             }
 
             async showMessenger() {
+                updateDebugInfo('Показываем интерфейс мессенджера...');
                 document.getElementById('authContainer').style.display = 'none';
                 document.getElementById('messengerContainer').style.display = 'flex';
                 
@@ -891,11 +969,11 @@
                 await this.loadChannels();
                 await this.setupRealtimeSubscription();
                 
-                this.updateConnectionStatus('Подключено к Supabase', 'status-online');
-                
                 // Включаем поле ввода
                 document.getElementById('messageInput').disabled = false;
                 document.getElementById('sendBtn').disabled = false;
+                
+                updateDebugInfo('✅ Мессенджер готов к работе!');
             }
 
             showAuth() {
@@ -905,14 +983,19 @@
             }
 
             async loadChannels() {
+                updateDebugInfo('Загрузка каналов...');
                 try {
                     const { data: channels, error } = await supabase
                         .from('channels')
                         .select('*')
                         .order('id');
 
-                    if (error) throw error;
+                    if (error) {
+                        updateDebugInfo(`❌ Ошибка загрузки каналов: ${error.message}`, true);
+                        throw error;
+                    }
 
+                    updateDebugInfo(`✅ Загружено каналов: ${channels.length}`);
                     this.channels = channels;
                     this.renderChannels();
 
@@ -950,6 +1033,7 @@
             }
 
             async switchChannel(channel) {
+                updateDebugInfo(`Переключаемся на канал: ${channel.name}`);
                 this.currentChannel = channel;
                 this.renderChannels();
                 document.getElementById('currentChannel').textContent = channel.name;
@@ -959,6 +1043,7 @@
             async loadMessages() {
                 if (!this.currentChannel) return;
 
+                updateDebugInfo(`Загрузка сообщений для канала: ${this.currentChannel.name}`);
                 const messagesContainer = document.getElementById('messagesContainer');
                 messagesContainer.innerHTML = '<div class="loading">Загрузка сообщений...</div>';
 
@@ -975,8 +1060,12 @@
                         .eq('channel_id', this.currentChannel.id)
                         .order('created_at', { ascending: true });
 
-                    if (error) throw error;
+                    if (error) {
+                        updateDebugInfo(`❌ Ошибка загрузки сообщений: ${error.message}`, true);
+                        throw error;
+                    }
 
+                    updateDebugInfo(`✅ Загружено сообщений: ${messages.length}`);
                     this.renderMessages(messages);
 
                 } catch (error) {
@@ -1025,6 +1114,8 @@
                 
                 if (!text || !this.currentUser || !this.currentChannel) return;
 
+                updateDebugInfo(`Отправка сообщения: ${text.substring(0, 20)}...`);
+                
                 try {
                     const { error } = await supabase
                         .from('messages')
@@ -1036,8 +1127,12 @@
                             }
                         ]);
 
-                    if (error) throw error;
+                    if (error) {
+                        updateDebugInfo(`❌ Ошибка отправки: ${error.message}`, true);
+                        throw error;
+                    }
 
+                    updateDebugInfo('✅ Сообщение отправлено');
                     messageInput.value = '';
 
                 } catch (error) {
@@ -1047,6 +1142,7 @@
             }
 
             async setupRealtimeSubscription() {
+                updateDebugInfo('Настройка real-time подписки...');
                 // Подписка на новые сообщения в реальном времени
                 supabase
                     .channel('public:messages')
@@ -1058,13 +1154,16 @@
                             table: 'messages'
                         },
                         (payload) => {
+                            updateDebugInfo('🔄 Новое сообщение получено в реальном времени');
                             // Если новое сообщение в текущем канале, обновляем чат
                             if (payload.new.channel_id === this.currentChannel?.id) {
                                 this.loadMessages();
                             }
                         }
                     )
-                    .subscribe();
+                    .subscribe((status) => {
+                        updateDebugInfo(`Real-time статус: ${status}`);
+                    });
             }
 
             formatTime(timestamp) {
@@ -1130,6 +1229,7 @@
                 this.currentUser = null;
                 this.showAuth();
                 this.hideSettings();
+                updateDebugInfo('👋 Пользователь вышел из системы');
             }
         }
 
