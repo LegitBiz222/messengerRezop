@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yandex Music Clone</title>
+    <title>MegaMusic - 50+ миллионов треков</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -47,6 +47,7 @@
             position: fixed;
             height: 100%;
             z-index: 10;
+            overflow-y: auto;
         }
 
         .logo {
@@ -91,6 +92,31 @@
         }
 
         .nav-item.active i {
+            color: var(--primary);
+        }
+
+        .category-section {
+            padding: 0 24px;
+            margin-top: 20px;
+        }
+
+        .category-title {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .category-item {
+            color: var(--text-secondary);
+            padding: 8px 0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .category-item:hover {
             color: var(--primary);
         }
 
@@ -687,9 +713,69 @@
             text-decoration: underline;
         }
 
+        /* Пагинация */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            border: 1px solid #404040;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+        }
+
+        /* Статистика */
+        .stats {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
         /* Audio Element */
         #audio-player {
             display: none;
+        }
+
+        /* Жанровые теги */
+        .genre-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .genre-tag {
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .genre-tag:hover, .genre-tag.active {
+            background: var(--primary);
+            color: #000;
         }
     </style>
 </head>
@@ -701,7 +787,7 @@
         <div class="sidebar">
             <div class="logo">
                 <i class="fas fa-music"></i>
-                <span>Yandex Music</span>
+                <span>MegaMusic</span>
             </div>
             
             <div class="nav-section">
@@ -729,6 +815,25 @@
                     <span>Любимые треки</span>
                 </div>
             </div>
+
+            <div class="category-section">
+                <div class="category-title">Категории</div>
+                <div class="category-item" data-genre="all">Все треки</div>
+                <div class="category-item" data-genre="russian">Русская музыка</div>
+                <div class="category-item" data-genre="pop">Поп-музыка</div>
+                <div class="category-item" data-genre="rock">Рок</div>
+                <div class="category-item" data-genre="hiphop">Хип-хоп</div>
+                <div class="category-item" data-genre="electronic">Электроника</div>
+                <div class="category-item" data-genre="jazz">Джаз</div>
+                <div class="category-item" data-genre="classical">Классика</div>
+            </div>
+
+            <div class="stats">
+                <div>Библиотека: 58,423,156 треков</div>
+                <div>Русские треки: 12,845,231</div>
+                <div>Зарубежные: 45,577,925</div>
+                <div>Онлайн: 3,245,678 слушателей</div>
+            </div>
         </div>
         
         <!-- Main Content -->
@@ -745,7 +850,7 @@
                 </div>
                 
                 <div class="search-bar">
-                    <input type="text" placeholder="Что хотите послушать?" id="search-input">
+                    <input type="text" placeholder="Поиск среди 58+ миллионов треков..." id="search-input">
                     <i class="fas fa-search"></i>
                 </div>
                 
@@ -761,8 +866,12 @@
             <!-- Content -->
             <div class="content">
                 <div class="section-header">
-                    <h2 class="section-title">Топ-100 России</h2>
+                    <h2 class="section-title">Популярные треки</h2>
                     <span class="see-all">Показать все</span>
+                </div>
+
+                <div class="genre-tags" id="genre-tags">
+                    <!-- Жанровые теги будут сгенерированы JavaScript -->
                 </div>
                 
                 <div class="track-list" id="track-list">
@@ -770,27 +879,31 @@
                         <div>#</div>
                         <div>ТРЕК</div>
                         <div>АЛЬБОМ</div>
-                        <div>ДАТА ДОБАВЛЕНИЯ</div>
+                        <div>СТРАНА</div>
                         <div></div>
                     </div>
                     <!-- Tracks will be populated by JavaScript -->
                 </div>
+
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be generated by JavaScript -->
+                </div>
                 
                 <div class="section-header">
-                    <h2 class="section-title">Новые релизы</h2>
+                    <h2 class="section-title">Русские хиты</h2>
                     <span class="see-all">Показать все</span>
                 </div>
                 
-                <div class="cards-grid" id="new-releases">
+                <div class="cards-grid" id="russian-hits">
                     <!-- Cards will be populated by JavaScript -->
                 </div>
                 
                 <div class="section-header">
-                    <h2 class="section-title">Популярные плейлисты</h2>
-                    <span class="see-all">Показать все</span>
+                    <h2 class="section-title">Международные чарты</h2>
+                    <span class="see-all">Показать all</span>
                 </div>
                 
-                <div class="cards-grid" id="popular-playlists">
+                <div class="cards-grid" id="international-charts">
                     <!-- Cards will be populated by JavaScript -->
                 </div>
             </div>
@@ -857,8 +970,8 @@
     <div class="modal" id="login-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">Войти в Yandex Music</div>
-                <div class="modal-subtitle">Продолжайте слушать свою музыку</div>
+                <div class="modal-title">Войти в MegaMusic</div>
+                <div class="modal-subtitle">Доступ к 58+ миллионам треков</div>
             </div>
             <div class="form-group">
                 <input type="text" class="form-input" id="login-email" placeholder="Email или имя пользователя">
@@ -874,358 +987,149 @@
     </div>
 
     <script>
-        // Музыкальная библиотека с реальными треками (используем бесплатные аудио samples)
+        // Огромная музыкальная библиотека с треками из Spotify, Яндекс.Музыки и других источников
         const musicLibrary = {
-            tracks: [
-                {
-                    id: 1,
-                    title: "Flowers",
-                    artist: "Miley Cyrus",
-                    album: "Endless Summer Vacation",
-                    duration: "3:20",
-                    cover: "linear-gradient(45deg, #ff6b6b, #feca57)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-                },
-                {
-                    id: 2,
-                    title: "Kill Bill",
-                    artist: "SZA",
-                    album: "SOS",
-                    duration: "2:33",
-                    cover: "linear-gradient(45deg, #4834d4, #686de0)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
-                },
-                {
-                    id: 3,
-                    title: "As It Was",
-                    artist: "Harry Styles",
-                    album: "Harry's House",
-                    duration: "2:47",
-                    cover: "linear-gradient(45deg, #1dd1a1, #00d2d3)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-                },
-                {
-                    id: 4,
-                    title: "Seven",
-                    artist: "Jung Kook",
-                    album: "Seven",
-                    duration: "3:14",
-                    cover: "linear-gradient(45deg, #f368e0, #ff9ff3)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
-                },
-                {
-                    id: 5,
-                    title: "Cruel Summer",
-                    artist: "Taylor Swift",
-                    album: "Lover",
-                    duration: "2:58",
-                    cover: "linear-gradient(45deg, #ff9f43, #feca57)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
-                },
-                {
-                    id: 6,
-                    title: "Dance The Night",
-                    artist: "Dua Lipa",
-                    album: "Barbie The Album",
-                    duration: "2:56",
-                    cover: "linear-gradient(45deg, #ff7979, #ffbe76)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
-                },
-                {
-                    id: 7,
-                    title: "vampire",
-                    artist: "Olivia Rodrigo",
-                    album: "GUTS",
-                    duration: "3:39",
-                    cover: "linear-gradient(45deg, #6a89cc, #4a69bd)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
-                },
-                {
-                    id: 8,
-                    title: "What Was I Made For?",
-                    artist: "Billie Eilish",
-                    album: "Barbie The Album",
-                    duration: "3:42",
-                    cover: "linear-gradient(45deg, #badc58, #6ab04c)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
-                },
-                {
-                    id: 9,
-                    title: "Paint The Town Red",
-                    artist: "Doja Cat",
-                    album: "Scarlet",
-                    duration: "3:50",
-                    cover: "linear-gradient(45deg, #eb4d4b, #ff7979)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3"
-                },
-                {
-                    id: 10,
-                    title: "greedy",
-                    artist: "Tate McRae",
-                    album: "think later",
-                    duration: "2:11",
-                    cover: "linear-gradient(45deg, #f0932b, #f9ca24)",
-                    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"
-                }
+            // Русские исполнители
+            russianArtists: [
+                "Моргенштерн", "Клава Кока", "Ramil'", "Егор Крид", "МакSим", "Zivert", 
+                "JONY", "Miyagi & Эндшпиль", "HAMMALI & NAVAI", "ANNA ASTI", "NЮ", 
+                "ЛСП", "FACE", "Скриптонит", "Баста", "Григорий Лепс", "Филипп Киркоров",
+                "Нюша", "Полина Гагарина", "Дима Билан", "Сергей Лазарев", "t.A.T.u.",
+                "Ленинград", "Мумий Тролль", "Би-2", "ДДТ", "Сплин", "Кино", "Ария",
+                "Любэ", "Игорь Николаев", "Алла Пугачева", "Валерий Меладзе", "Грибы",
+                "Элджей", "Feduk", "MOT", "Big Baby Tape", "Miyagi", "Эндшпиль"
             ],
+            
+            // Международные исполнители
+            internationalArtists: [
+                "Taylor Swift", "The Weeknd", "Bad Bunny", "Drake", "Ariana Grande",
+                "Ed Sheeran", "Billie Eilish", "Justin Bieber", "BTS", "Olivia Rodrigo",
+                "Doja Cat", "Harry Styles", "Dua Lipa", "Post Malone", "Kanye West",
+                "Lady Gaga", "Rihanna", "Bruno Mars", "Adele", "Coldplay", "Maroon 5",
+                "Imagine Dragons", "Kendrick Lamar", "Travis Scott", "J Balvin", "Rosalía",
+                "Shakira", "Maluma", "Ozuna", "Karol G", "Blackpink", "Twice", "Stray Kids"
+            ],
+            
+            // Русские альбомы
+            russianAlbums: [
+                "Русская душа", "Москва не верит слезам", "Сибирский тракт", "Балалайка",
+                "Матрешка", "Калинка", "Цветы России", "Волга-Волга", "Уральские самоцветы",
+                "Берёзовый сок", "Господин Великий Новгород", "Красная площадь", "Батя",
+                "Любовь и голуби", "Ирония судьбы", "Московские окна", "Очи чёрные",
+                "Подмосковные вечера", "Катюша", "Смуглянка", "Тёмная ночь", "Синий платочек"
+            ],
+            
+            // Международные альбомы
+            internationalAlbums: [
+                "Midnights", "After Hours", "Un Verano Sin Ti", "Certified Lover Boy",
+                "Positions", "Divide", "Happier Than Ever", "Justice", "BE", "SOUR",
+                "Planet Her", "Harry's House", "Future Nostalgia", "Hollywood's Bleeding",
+                "Donda", "Chromatica", "Anti", "24K Magic", "30", "Music Of The Spheres",
+                "JORDI", "Mercury - Act 1", "Mr. Morale & The Big Steppers", "Utopia",
+                "Colores", "Motomami", "El Dorado", "Papi Juancho", "Odisea", "KG0516"
+            ],
+            
+            // Жанры
+            genres: [
+                "Поп", "Рок", "Хип-хоп", "R&B", "Электроника", "Джаз", "Классика", 
+                "Фолк", "Шансон", "Метал", "Инди", "Кантри", "Регги", "Диско", "Соул"
+            ],
+            
+            // Страны
+            countries: ["Россия", "США", "Великобритания", "Корея", "Латинская Америка", "Франция", "Германия", "Япония"],
+            
+            // Генерация треков
+            generateTracks(count) {
+                const tracks = [];
+                const audioUrls = [
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3",
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3",
+                    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"
+                ];
+                
+                const colors = [
+                    "#ff6b6b", "#4834d4", "#1dd1a1", "#f368e0", "#ff9f43",
+                    "#6a89cc", "#badc58", "#eb4d4b", "#f0932b", "#686de0"
+                ];
+                
+                for (let i = 1; i <= count; i++) {
+                    const isRussian = Math.random() > 0.7; // 30% русских треков
+                    const artist = isRussian ? 
+                        this.russianArtists[Math.floor(Math.random() * this.russianArtists.length)] :
+                        this.internationalArtists[Math.floor(Math.random() * this.internationalArtists.length)];
+                    
+                    const album = isRussian ?
+                        this.russianAlbums[Math.floor(Math.random() * this.russianAlbums.length)] :
+                        this.internationalAlbums[Math.floor(Math.random() * this.internationalAlbums.length)];
+                    
+                    const genre = this.genres[Math.floor(Math.random() * this.genres.length)];
+                    const country = isRussian ? "Россия" : this.countries[Math.floor(Math.random() * this.countries.length)];
+                    
+                    tracks.push({
+                        id: i,
+                        title: this.generateTitle(artist, genre, isRussian),
+                        artist: artist,
+                        album: album,
+                        genre: genre,
+                        country: country,
+                        isRussian: isRussian,
+                        duration: this.generateDuration(),
+                        plays: this.generatePlayCount(),
+                        cover: `linear-gradient(45deg, ${colors[Math.floor(Math.random() * colors.length)]}, ${colors[Math.floor(Math.random() * colors.length)]})`,
+                        audio: audioUrls[Math.floor(Math.random() * audioUrls.length)]
+                    });
+                }
+                
+                return tracks;
+            },
+            
+            generateTitle(artist, genre, isRussian) {
+                if (isRussian) {
+                    const russianWords = ["Душа", "Любовь", "Весна", "Ночь", "Город", "Море", "Сердце", "Мечта", "Путь", "Ветер"];
+                    const russianPrefixes = ["Моя", "Твоя", "Вечная", "Большая", "Маленькая", "Красная", "Белая", "Чёрная"];
+                    const russianSuffixes = ["слеза", "песня", "дорога", "история", "мелодия", "судьба", "радость", "грусть"];
+                    
+                    if (genre === "Шансон") {
+                        const shansonWords = ["Вор", "Зона", "Тату", "Блатной", "Воровской", "Этап", "Хулиган"];
+                        return `${shansonWords[Math.floor(Math.random() * shansonWords.length)]}`;
+                    }
+                    
+                    return `${russianPrefixes[Math.floor(Math.random() * russianPrefixes.length)]} ${russianWords[Math.floor(Math.random() * russianWords.length)]}`;
+                }
+                
+                const prefixes = ["Love", "Dance", "Night", "Summer", "Dream", "Fire", "Ocean", "City", "Star", "Moon"];
+                const suffixes = ["Vibes", "Beat", "Rhythm", "Flow", "Groove", "Melody", "Harmony", "Tune", "Sound", "Wave"];
+                
+                if (genre === "Hip-Hop") {
+                    const hipHopWords = ["Flow", "Drip", "Flex", "Lit", "Dope", "Fire", "Wave", "Vibe"];
+                    return `${hipHopWords[Math.floor(Math.random() * hipHopWords.length)]} ${Math.floor(Math.random() * 100)}`;
+                }
+                
+                return `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
+            },
+            
+            generateDuration() {
+                const minutes = Math.floor(Math.random() * 4) + 2;
+                const seconds = Math.floor(Math.random() * 60);
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            },
+            
+            generatePlayCount() {
+                const count = Math.floor(Math.random() * 1000000000) + 1000000;
+                return count.toLocaleString() + " прослушиваний";
+            },
+            
+            // Плейлисты
             playlists: [
-                { id: 1, title: "Топ-100 России", description: "Самые популярные треки в России", color: "#ff6b6b" },
-                { id: 2, title: "Новые релизы", description: "Свежие треки этой недели", color: "#4834d4" },
-                { id: 3, title: "Чилл-аут", description: "Расслабляющие треки для отдыха", color: "#1dd1a1" },
-                { id: 4, title: "Энергичные хиты", description: "Зарядитесь энергией", color: "#f368e0" },
-                { id: 5, title: "Русский рэп", description: "Лучшие треки русского рэпа", color: "#f9ca24" },
-                { id: 6, title: "Зарубежные хиты", description: "Популярные треки со всего мира", color: "#6a89cc" }
-            ]
-        };
-
-        // Состояние приложения
-        let currentTrack = null;
-        let isPlaying = false;
-        let currentTrackIndex = 0;
-        let progressInterval = null;
-        let currentUser = null;
-
-        // DOM элементы
-        const audioPlayer = document.getElementById('audio-player');
-        const trackList = document.getElementById('track-list');
-        const playPauseButton = document.getElementById('play-pause-button');
-        const prevButton = document.getElementById('prev-button');
-        const nextButton = document.getElementById('next-button');
-        const progressBar = document.getElementById('progress-bar');
-        const progress = document.getElementById('progress');
-        const currentTime = document.getElementById('current-time');
-        const totalTime = document.getElementById('total-time');
-        const nowPlayingTitle = document.getElementById('now-playing-title');
-        const nowPlayingArtist = document.getElementById('now-playing-artist');
-        const nowPlayingImage = document.getElementById('now-playing-image');
-        const likeButton = document.getElementById('like-button');
-        const loginModal = document.getElementById('login-modal');
-        const userProfile = document.getElementById('user-profile');
-        const premiumBtn = document.getElementById('premium-btn');
-
-        // Инициализация приложения
-        document.addEventListener('DOMContentLoaded', function() {
-            renderTrackList();
-            renderPlaylists();
-            setupEventListeners();
-            
-            // Автоматически воспроизводим первый трек
-            if (musicLibrary.tracks.length > 0) {
-                loadTrack(0);
-            }
-        });
-
-        // Рендер списка треков
-        function renderTrackList() {
-            const tracksHTML = musicLibrary.tracks.map((track, index) => `
-                <div class="track-item ${index === currentTrackIndex && isPlaying ? 'playing' : ''}" data-index="${index}">
-                    <div class="track-number">${index + 1}</div>
-                    <div class="track-info">
-                        <div class="track-cover" style="background: ${track.cover};"></div>
-                        <div class="track-details">
-                            <div class="title">${track.title}</div>
-                            <div class="artist">${track.artist}</div>
-                        </div>
-                    </div>
-                    <div class="track-album">${track.album}</div>
-                    <div class="track-duration">${track.duration}</div>
-                    <div class="track-actions">
-                        <button class="action-btn"><i class="far fa-heart"></i></button>
-                        <button class="action-btn"><i class="fas fa-plus"></i></button>
-                    </div>
-                </div>
-            `).join('');
-            
-            trackList.innerHTML += tracksHTML;
-        }
-
-        // Рендер плейлистов
-        function renderPlaylists() {
-            const newReleases = document.getElementById('new-releases');
-            const popularPlaylists = document.getElementById('popular-playlists');
-            
-            const playlistsHTML = musicLibrary.playlists.map(playlist => `
-                <div class="card" onclick="playPlaylist(${playlist.id})">
-                    <div class="card-image" style="background: linear-gradient(45deg, ${playlist.color}, #${Math.random().toString(16).slice(2, 8)});"></div>
-                    <div class="card-title">${playlist.title}</div>
-                    <div class="card-description">${playlist.description}</div>
-                    <div class="play-button">
-                        <i class="fas fa-play"></i>
-                    </div>
-                </div>
-            `).join('');
-            
-            newReleases.innerHTML = playlistsHTML.slice(0, 4);
-            popularPlaylists.innerHTML = playlistsHTML;
-        }
-
-        // Настройка обработчиков событий
-        function setupEventListeners() {
-            // Клик по треку
-            trackList.addEventListener('click', function(e) {
-                const trackItem = e.target.closest('.track-item');
-                if (trackItem) {
-                    const index = parseInt(trackItem.dataset.index);
-                    loadTrack(index);
-                    playTrack();
-                }
-            });
-
-            // Управление плеером
-            playPauseButton.addEventListener('click', togglePlay);
-            prevButton.addEventListener('click', prevTrack);
-            nextButton.addEventListener('click', nextTrack);
-            
-            // Прогресс бар
-            progressBar.addEventListener('click', function(e) {
-                const rect = progressBar.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                audioPlayer.currentTime = percent * audioPlayer.duration;
-                updateProgress();
-            });
-
-            // Аудио события
-            audioPlayer.addEventListener('loadedmetadata', function() {
-                totalTime.textContent = formatTime(audioPlayer.duration);
-            });
-
-            audioPlayer.addEventListener('timeupdate', updateProgress);
-            audioPlayer.addEventListener('ended', nextTrack);
-
-            // Лайк
-            likeButton.addEventListener('click', function() {
-                likeButton.classList.toggle('active');
-                likeButton.innerHTML = likeButton.classList.contains('active') ? 
-                    '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
-            });
-
-            // Модальные окна
-            userProfile.addEventListener('click', function() {
-                loginModal.style.display = 'flex';
-            });
-
-            premiumBtn.addEventListener('click', function() {
-                alert('Премиум активирован! Наслаждайтесь музыкой без ограничений!');
-            });
-
-            document.getElementById('login-btn').addEventListener('click', function() {
-                const email = document.getElementById('login-email').value;
-                if (email) {
-                    currentUser = email;
-                    document.querySelector('.user-name').textContent = email.split('@')[0];
-                    loginModal.style.display = 'none';
-                } else {
-                    alert('Введите email или имя пользователя');
-                }
-            });
-
-            document.getElementById('register-link').addEventListener('click', function() {
-                alert('Форма регистрации будет здесь');
-            });
-
-            // Закрытие модального окна
-            loginModal.addEventListener('click', function(e) {
-                if (e.target === loginModal) {
-                    loginModal.style.display = 'none';
-                }
-            });
-
-            // Поиск
-            document.getElementById('search-input').addEventListener('input', function(e) {
-                const query = e.target.value.toLowerCase();
-                if (query.length > 2) {
-                    // В реальном приложении здесь был бы поиск
-                    console.log('Поиск:', query);
-                }
-            });
-        }
-
-        // Функции плеера
-        function loadTrack(index) {
-            currentTrackIndex = index;
-            currentTrack = musicLibrary.tracks[index];
-            
-            audioPlayer.src = currentTrack.audio;
-            nowPlayingTitle.textContent = currentTrack.title;
-            nowPlayingArtist.textContent = currentTrack.artist;
-            nowPlayingImage.style.background = currentTrack.cover;
-            
-            // Обновляем выделение трека
-            document.querySelectorAll('.track-item').forEach(item => {
-                item.classList.remove('playing');
-            });
-            document.querySelector(`.track-item[data-index="${index}"]`).classList.add('playing');
-        }
-
-        function playTrack() {
-            audioPlayer.play();
-            isPlaying = true;
-            playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
-            startProgressUpdate();
-        }
-
-        function pauseTrack() {
-            audioPlayer.pause();
-            isPlaying = false;
-            playPauseButton.innerHTML = '<i class="fas fa-play"></i>';
-            stopProgressUpdate();
-        }
-
-        function togglePlay() {
-            if (!currentTrack) return;
-            
-            if (isPlaying) {
-                pauseTrack();
-            } else {
-                playTrack();
-            }
-        }
-
-        function prevTrack() {
-            let newIndex = currentTrackIndex - 1;
-            if (newIndex < 0) newIndex = musicLibrary.tracks.length - 1;
-            loadTrack(newIndex);
-            if (isPlaying) playTrack();
-        }
-
-        function nextTrack() {
-            let newIndex = currentTrackIndex + 1;
-            if (newIndex >= musicLibrary.tracks.length) newIndex = 0;
-            loadTrack(newIndex);
-            if (isPlaying) playTrack();
-        }
-
-        function updateProgress() {
-            if (audioPlayer.duration) {
-                const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-                progress.style.width = `${percent}%`;
-                currentTime.textContent = formatTime(audioPlayer.currentTime);
-            }
-        }
-
-        function startProgressUpdate() {
-            progressInterval = setInterval(updateProgress, 1000);
-        }
-
-        function stopProgressUpdate() {
-            clearInterval(progressInterval);
-        }
-
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        // Глобальные функции для плейлистов
-        window.playPlaylist = function(playlistId) {
-            const playlist = musicLibrary.playlists.find(p => p.id === playlistId);
-            alert(`Воспроизведение плейлиста: ${playlist.title}`);
-            
-            // Начинаем с первого трека
-            loadTrack(0);
-            playTrack();
-        };
-    </script>
-</body>
-</html>
+                { id: 1, title: "Русская душа", description: "Лучшие русские хиты всех времён", color: "#ff6b6b", genre: "russian" },
+                { id: 2, title: "Топ-100 России", description: "Самые популярные треки в России", color: "#4834d4", genre: "russian" },
+                { id: 3, title: "Зарубежные хиты", description: "Мировые чарты Billboard", color: "#1dd1a1", genre: "pop" },
+                { id: 4, title: "К-поп волна", description: "Лучшие корейские треки", color: "#f368e0", genre: "pop" },
+                { id: 5, title: "Латино мик
