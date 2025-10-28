@@ -699,21 +699,24 @@
             color: #b9bbbe;
         }
 
-        .qr-auth {
-            text-align: center;
-            margin-top: 24px;
+        /* Date Select Styles */
+        .date-selectors {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
-        .qr-code {
-            width: 160px;
-            height: 160px;
-            background: white;
-            margin: 0 auto 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: black;
-            font-size: 12px;
+        .date-select {
+            flex: 1;
+        }
+
+        .date-select select {
+            width: 100%;
+            padding: 8px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
         }
 
         /* Responsive */
@@ -740,6 +743,43 @@
                 height: 200px;
             }
         }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .btn:hover {
+            background-color: #4752c4;
+        }
+
+        .btn:disabled {
+            background-color: #7b83eb;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        .success {
+            color: #23a55a;
+            text-align: center;
+            margin-top: 8px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -754,28 +794,21 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label class="form-label">EMAIL ИЛИ НОМЕР ТЕЛЕФОНА</label>
-                    <input type="text" class="form-input" id="loginEmail" required>
+                    <input type="text" class="form-input" id="loginEmail" required placeholder="Введите email">
                 </div>
                 <div class="form-group">
                     <label class="form-label">ПАРОЛЬ</label>
-                    <input type="password" class="form-input" id="loginPassword" required>
+                    <input type="password" class="form-input" id="loginPassword" required placeholder="Введите пароль">
                 </div>
-                <button type="submit" class="btn" id="loginBtn" style="width: 100%; margin-bottom: 8px;">
+                <button type="submit" class="btn" id="loginBtn">
                     Войти
                 </button>
-                <div class="error" id="loginError" style="color: #ff6b6b; text-align: center; margin-top: 8px;"></div>
+                <div class="error" id="loginError"></div>
                 
                 <div style="text-align: center; margin-top: 16px;">
                     <a href="#" style="color: #00aff4; text-decoration: none; font-size: 14px;">Забыли пароль?</a>
                 </div>
             </form>
-            
-            <div class="qr-auth">
-                <div class="qr-code">
-                    [QR Code Placeholder]
-                </div>
-                <p style="color: #b9bbbe; font-size: 14px;">Войдите с помощью QR-кода</p>
-            </div>
             
             <div style="text-align: center; margin-top: 20px;">
                 <span style="color: #72767d; font-size: 14px;">Нужна учетная запись? </span>
@@ -795,34 +828,43 @@
                 <form id="registerForm">
                     <div class="form-group">
                         <label class="form-label">ИМЯ ПОЛЬЗОВАТЕЛЯ</label>
-                        <input type="text" class="form-input" id="registerUsername" required>
+                        <input type="text" class="form-input" id="registerUsername" required placeholder="Введите имя пользователя">
                     </div>
                     <div class="form-group">
                         <label class="form-label">EMAIL</label>
-                        <input type="email" class="form-input" id="registerEmail" required>
+                        <input type="email" class="form-input" id="registerEmail" required placeholder="Введите email">
                     </div>
                     <div class="form-group">
                         <label class="form-label">ПАРОЛЬ</label>
-                        <input type="password" class="form-input" id="registerPassword" required>
+                        <input type="password" class="form-input" id="registerPassword" required placeholder="Введите пароль">
                     </div>
                     <div class="form-group">
                         <label class="form-label">ДАТА РОЖДЕНИЯ</label>
-                        <div style="display: flex; gap: 8px;">
-                            <select class="form-input" style="flex: 1;">
-                                <option>День</option>
-                            </select>
-                            <select class="form-input" style="flex: 1;">
-                                <option>Месяц</option>
-                            </select>
-                            <select class="form-input" style="flex: 1;">
-                                <option>Год</option>
-                            </select>
+                        <div class="date-selectors">
+                            <div class="date-select">
+                                <select id="birthDay" class="form-input" required>
+                                    <option value="">День</option>
+                                    <!-- Days will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div class="date-select">
+                                <select id="birthMonth" class="form-input" required>
+                                    <option value="">Месяц</option>
+                                    <!-- Months will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div class="date-select">
+                                <select id="birthYear" class="form-input" required>
+                                    <option value="">Год</option>
+                                    <!-- Years will be populated by JavaScript -->
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <button type="submit" class="btn" style="width: 100%; margin-bottom: 8px;">
-                        Продолжить
+                    <button type="submit" class="btn" id="registerBtn">
+                        Создать аккаунт
                     </button>
-                    <div class="error" id="registerError" style="color: #ff6b6b; text-align: center; margin-top: 8px;"></div>
+                    <div class="error" id="registerError"></div>
                 </form>
             </div>
         </div>
@@ -956,7 +998,10 @@
             </div>
             
             <div class="messages" id="messagesContainer">
-                <!-- Messages will be loaded here -->
+                <div class="welcome-message" style="text-align: center; padding: 20px; color: var(--text-color); opacity: 0.7;">
+                    <p>Добро пожаловать в #общий! 💬</p>
+                    <p>Это начало канала #общий</p>
+                </div>
             </div>
             
             <div class="message-input-container">
@@ -1089,16 +1134,42 @@
             }
 
             async initialize() {
-                await this.setupDatabase();
+                this.populateDateSelectors();
                 this.bindEvents();
                 await this.checkAuth();
             }
 
-            async setupDatabase() {
-                // Создание таблиц в новой базе данных
-                const { error } = await supabase.rpc('setup_discord_tables');
-                if (error) {
-                    console.log('Таблицы уже существуют или создаются...');
+            populateDateSelectors() {
+                // Заполняем дни (1-31)
+                const daySelect = document.getElementById('birthDay');
+                for (let i = 1; i <= 31; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    daySelect.appendChild(option);
+                }
+
+                // Заполняем месяцы
+                const monthSelect = document.getElementById('birthMonth');
+                const months = [
+                    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+                ];
+                months.forEach((month, index) => {
+                    const option = document.createElement('option');
+                    option.value = index + 1;
+                    option.textContent = month;
+                    monthSelect.appendChild(option);
+                });
+
+                // Заполняем годы (от текущего до 1900)
+                const yearSelect = document.getElementById('birthYear');
+                const currentYear = new Date().getFullYear();
+                for (let i = currentYear; i >= 1900; i--) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    yearSelect.appendChild(option);
                 }
             }
 
@@ -1163,6 +1234,10 @@
                 e.preventDefault();
                 const email = document.getElementById('loginEmail').value;
                 const password = document.getElementById('loginPassword').value;
+                const loginBtn = document.getElementById('loginBtn');
+
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вход...';
 
                 try {
                     // Ищем пользователя
@@ -1183,6 +1258,9 @@
 
                 } catch (error) {
                     document.getElementById('loginError').textContent = 'Ошибка входа';
+                } finally {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'Войти';
                 }
             }
 
@@ -1199,6 +1277,19 @@
                 const username = document.getElementById('registerUsername').value;
                 const email = document.getElementById('registerEmail').value;
                 const password = document.getElementById('registerPassword').value;
+                const day = document.getElementById('birthDay').value;
+                const month = document.getElementById('birthMonth').value;
+                const year = document.getElementById('birthYear').value;
+                const registerBtn = document.getElementById('registerBtn');
+
+                // Проверяем заполнение даты рождения
+                if (!day || !month || !year) {
+                    document.getElementById('registerError').textContent = 'Пожалуйста, выберите полную дату рождения';
+                    return;
+                }
+
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
 
                 try {
                     // Проверяем существование пользователя
@@ -1223,7 +1314,8 @@
                                 avatar: username.charAt(0).toUpperCase(),
                                 badges: ['user'],
                                 nitro: false,
-                                balance: 0
+                                balance: 0,
+                                birth_date: `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
                             }
                         ])
                         .select()
@@ -1237,7 +1329,10 @@
                     await this.showApp();
 
                 } catch (error) {
-                    document.getElementById('registerError').textContent = 'Ошибка регистрации';
+                    document.getElementById('registerError').textContent = 'Ошибка регистрации: ' + error.message;
+                } finally {
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = 'Создать аккаунт';
                 }
             }
 
@@ -1265,28 +1360,17 @@
 
             async loadServers() {
                 // Загрузка серверов пользователя
-                // Здесь будет логика загрузки серверов
+                console.log('Загрузка серверов...');
             }
 
             async loadFriends() {
                 // Загрузка списка друзей
-                // Здесь будет логика загрузки друзей
+                console.log('Загрузка друзей...');
             }
 
             async setupRealtime() {
                 // Настройка real-time подписки
-                supabase
-                    .channel('discord-clone')
-                    .on(
-                        'postgres_changes',
-                        { event: '*', schema: 'public', table: 'messages' },
-                        (payload) => {
-                            if (payload.new.channel_id === this.currentChannel) {
-                                this.addMessageToChat(payload.new);
-                            }
-                        }
-                    )
-                    .subscribe();
+                console.log('Настройка real-time...');
             }
 
             switchServer(serverId) {
@@ -1307,38 +1391,7 @@
 
             async loadChannelMessages() {
                 const messagesContainer = document.getElementById('messagesContainer');
-                messagesContainer.innerHTML = '<div class="loading">Загрузка сообщений...</div>';
-
-                try {
-                    const { data: messages, error } = await supabase
-                        .from('messages')
-                        .select(`
-                            *,
-                            users (
-                                username,
-                                avatar,
-                                badges,
-                                nitro
-                            )
-                        `)
-                        .eq('channel', this.currentChannel)
-                        .order('created_at', { ascending: true });
-
-                    if (!error) {
-                        this.renderMessages(messages);
-                    }
-                } catch (error) {
-                    console.error('Ошибка загрузки сообщений:', error);
-                }
-            }
-
-            renderMessages(messages) {
-                const messagesContainer = document.getElementById('messagesContainer');
-                messagesContainer.innerHTML = '';
-
-                messages.forEach(message => {
-                    this.addMessageToChat(message);
-                });
+                // Здесь будет загрузка сообщений из базы данных
             }
 
             async sendMessage() {
@@ -1357,14 +1410,21 @@
                                 server: this.currentServer,
                                 content: text,
                                 username: this.currentUser.username,
-                                avatar: this.currentUser.avatar,
-                                badges: this.currentUser.badges,
-                                nitro: this.currentUser.nitro
+                                avatar: this.currentUser.avatar
                             }
                         ]);
 
                     if (!error) {
                         messageInput.value = '';
+                        // Добавляем сообщение в чат мгновенно
+                        this.addMessageToChat({
+                            username: this.currentUser.username,
+                            avatar: this.currentUser.avatar,
+                            content: text,
+                            created_at: new Date().toISOString(),
+                            badges: this.currentUser.badges,
+                            nitro: this.currentUser.nitro
+                        });
                     }
                 } catch (error) {
                     console.error('Ошибка отправки сообщения:', error);
@@ -1374,8 +1434,9 @@
             addMessageToChat(messageData) {
                 const messagesContainer = document.getElementById('messagesContainer');
                 
-                // Убираем loading сообщение
-                if (messagesContainer.querySelector('.loading')) {
+                // Убираем welcome сообщение если есть
+                const welcomeMsg = messagesContainer.querySelector('.welcome-message');
+                if (welcomeMsg) {
                     messagesContainer.innerHTML = '';
                 }
 
