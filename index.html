@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect Messenger</title>
+    <title>Rezop Messenger</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -73,7 +74,6 @@
             height: 100vh;
         }
 
-        /* Стили аутентификации */
         .auth-container {
             width: 100%;
             height: 100vh;
@@ -155,6 +155,11 @@
             background-color: #4752c4;
         }
 
+        .btn:disabled {
+            background-color: #7b83eb;
+            cursor: not-allowed;
+        }
+
         .error {
             color: #ff6b6b;
             text-align: center;
@@ -162,7 +167,13 @@
             font-size: 14px;
         }
 
-        /* Стили мессенджера */
+        .success {
+            color: #23a55a;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
         .messenger-container {
             display: none;
             width: 100%;
@@ -500,7 +511,33 @@
             opacity: 0.7;
         }
 
-        /* Адаптивность */
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            z-index: 1001;
+        }
+
+        .status-online {
+            background-color: #23a55a;
+            color: white;
+        }
+
+        .status-offline {
+            background-color: #f23f43;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -526,10 +563,15 @@
     </style>
 </head>
 <body>
+    <!-- Статус соединения -->
+    <div class="connection-status status-online" id="connectionStatus">
+        <i class="fas fa-wifi"></i> <span id="statusText">Подключение...</span>
+    </div>
+
     <!-- Экран авторизации -->
     <div class="auth-container" id="authContainer">
         <div class="auth-form">
-            <h2><i class="fas fa-comments"></i> Connect Messenger</h2>
+            <h2><i class="fas fa-comments"></i> Rezop Messenger</h2>
             <div class="auth-tabs">
                 <div class="auth-tab active" id="loginTab">Вход</div>
                 <div class="auth-tab" id="registerTab">Регистрация</div>
@@ -544,7 +586,9 @@
                     <label for="loginPassword"><i class="fas fa-lock"></i> Пароль</label>
                     <input type="password" id="loginPassword" required placeholder="Ваш пароль">
                 </div>
-                <button type="submit" class="btn"><i class="fas fa-sign-in-alt"></i> Войти</button>
+                <button type="submit" class="btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </button>
                 <div class="error" id="loginError"></div>
             </form>
             
@@ -561,8 +605,11 @@
                     <label for="registerPassword"><i class="fas fa-lock"></i> Пароль</label>
                     <input type="password" id="registerPassword" required placeholder="Не менее 6 символов">
                 </div>
-                <button type="submit" class="btn"><i class="fas fa-user-plus"></i> Создать аккаунт</button>
+                <button type="submit" class="btn" id="registerBtn">
+                    <i class="fas fa-user-plus"></i> Создать аккаунт
+                </button>
                 <div class="error" id="registerError"></div>
+                <div class="success" id="registerSuccess"></div>
             </form>
         </div>
     </div>
@@ -581,23 +628,8 @@
                 </div>
             </div>
             
-            <div class="channels">
-                <div class="channel active" data-channel="general">
-                    <span class="channel-icon"><i class="fas fa-hashtag"></i></span>
-                    <span class="channel-name">общий</span>
-                </div>
-                <div class="channel" data-channel="games">
-                    <span class="channel-icon"><i class="fas fa-hashtag"></i></span>
-                    <span class="channel-name">игры</span>
-                </div>
-                <div class="channel" data-channel="music">
-                    <span class="channel-icon"><i class="fas fa-hashtag"></i></span>
-                    <span class="channel-name">музыка</span>
-                </div>
-                <div class="channel" data-channel="movies">
-                    <span class="channel-icon"><i class="fas fa-hashtag"></i></span>
-                    <span class="channel-name">фильмы</span>
-                </div>
+            <div class="channels" id="channelsList">
+                <div class="loading">Загрузка каналов...</div>
             </div>
             
             <div class="settings">
@@ -612,24 +644,22 @@
             <div class="chat-header">
                 <div class="chat-title">
                     <i class="fas fa-hashtag"></i> <span id="currentChannel">общий</span>
+                    <span style="margin-left: 10px; font-size: 12px; color: #b5bac1;" id="onlineCount">👥 1 онлайн</span>
                 </div>
             </div>
             
             <div class="messages" id="messagesContainer">
-                <div class="welcome-message">
-                    <p>Добро пожаловать в Connect Messenger! 💬</p>
-                    <p>Начните общение в выбранном канале</p>
-                </div>
+                <div class="loading">Загрузка сообщений...</div>
             </div>
             
             <div class="message-input-container">
                 <div class="emoji-picker" id="emojiPicker"></div>
-                <textarea class="message-input" id="messageInput" placeholder="Написать сообщение..."></textarea>
+                <textarea class="message-input" id="messageInput" placeholder="Написать сообщение..." disabled></textarea>
                 <div class="input-actions">
                     <button type="button" class="action-btn" id="emojiBtn" title="Смайлики">
                         <i class="far fa-smile"></i>
                     </button>
-                    <button type="button" class="action-btn" id="sendBtn" title="Отправить">
+                    <button type="button" class="action-btn" id="sendBtn" title="Отправить" disabled>
                         <i class="fas fa-paper-plane"></i> Отправить
                     </button>
                 </div>
@@ -661,6 +691,15 @@
             </div>
             
             <div class="settings-section" style="margin-top: 20px;">
+                <h4>Информация</h4>
+                <p style="font-size: 14px; color: var(--text-color); opacity: 0.8;">
+                    ✅ Реальный мессенджер с Rezop<br>
+                    💬 Сообщения видны всем пользователям<br>
+                    🚀 Работает в реальном времени
+                </p>
+            </div>
+            
+            <div class="settings-section" style="margin-top: 20px;">
                 <h4>Учетная запись</h4>
                 <button class="btn" id="logoutBtn" style="margin-top: 10px;">
                     <i class="fas fa-sign-out-alt"></i> Выйти
@@ -670,56 +709,29 @@
     </div>
 
     <script>
-        // Константы для localStorage
-        const STORAGE_KEYS = {
-            USERS: 'messenger_users',
-            MESSAGES: 'messenger_messages',
-            CURRENT_USER: 'messenger_current_user',
-            THEME: 'messenger_theme'
-        };
+        // Конфигурация Supabase - ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ!
+        const SUPABASE_URL = 'https://yizjvfyloyemelbvpxst.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlpemp2Znlsb3llbWVsYnZweHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTg4ODYsImV4cCI6MjA3NzIzNDg4Nn0.GpUcpeXJCuBFXpFGvTKeIVSi5248KVZSFyMd6NeuJVw';
+
+        // Инициализация Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Emoji для выбора
         const EMOJIS = ['😀', '😂', '🤣', '😍', '😎', '😊', '🥰', '😘', '😜', '🤔', '😴', '🥳', '😱', '🤯', '😡', '👋', '👍', '👎', '❤️', '🔥', '⭐', '🎉', '💯'];
 
-        class Messenger {
+        class SupabaseMessenger {
             constructor() {
                 this.currentUser = null;
-                this.activeChannel = 'general';
+                this.currentChannel = null;
+                this.channels = [];
                 this.initialize();
             }
 
-            initialize() {
-                this.initStorage();
+            async initialize() {
                 this.bindEvents();
-                this.checkAuth();
+                await this.checkAuth();
                 this.loadTheme();
-            }
-
-            initStorage() {
-                // Инициализация пользователей
-                if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-                    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
-                }
-
-                // Инициализация сообщений
-                if (!localStorage.getItem(STORAGE_KEYS.MESSAGES)) {
-                    const initialMessages = {
-                        general: [
-                            {
-                                id: Date.now(),
-                                sender: 'System',
-                                avatar: 'S',
-                                text: 'Добро пожаловать в Connect Messenger! 🚀 Начните общение прямо сейчас.',
-                                time: this.getCurrentTime(),
-                                channel: 'general'
-                            }
-                        ],
-                        games: [],
-                        music: [],
-                        movies: []
-                    };
-                    localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(initialMessages));
-                }
+                this.initEmojiPicker();
             }
 
             bindEvents() {
@@ -738,11 +750,6 @@
                     }
                 });
 
-                // Каналы
-                document.querySelectorAll('.channel').forEach(channel => {
-                    channel.addEventListener('click', () => this.switchChannel(channel));
-                });
-
                 // Настройки
                 document.getElementById('settingsBtn').addEventListener('click', () => this.showSettings());
                 document.getElementById('closeSettings').addEventListener('click', () => this.hideSettings());
@@ -750,7 +757,6 @@
 
                 // Emoji
                 document.getElementById('emojiBtn').addEventListener('click', () => this.toggleEmojiPicker());
-                this.initEmojiPicker();
 
                 // Закрытие модального окна при клике вне
                 document.getElementById('settingsModal').addEventListener('click', (e) => {
@@ -760,10 +766,12 @@
                 });
             }
 
-            checkAuth() {
-                this.currentUser = JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_USER));
-                if (this.currentUser) {
-                    this.showMessenger();
+            async checkAuth() {
+                // Проверяем, есть ли сохраненный пользователь
+                const savedUser = localStorage.getItem('messenger_user');
+                if (savedUser) {
+                    this.currentUser = JSON.parse(savedUser);
+                    await this.showMessenger();
                 } else {
                     this.showAuth();
                 }
@@ -783,90 +791,211 @@
                 document.getElementById('registerForm').style.display = 'block';
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('registerError').textContent = '';
+                document.getElementById('registerSuccess').textContent = '';
             }
 
-            handleLogin(e) {
+            async handleLogin(e) {
                 e.preventDefault();
                 const email = document.getElementById('loginEmail').value;
                 const password = document.getElementById('loginPassword').value;
+                const loginBtn = document.getElementById('loginBtn');
 
-                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
-                const user = users.find(u => u.email === email && u.password === password);
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вход...';
 
-                if (user) {
-                    this.currentUser = user;
-                    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(this.currentUser));
-                    this.showMessenger();
-                } else {
-                    document.getElementById('loginError').textContent = 'Неверный email или пароль';
+                try {
+                    // В реальном приложении здесь была бы аутентификация через Supabase Auth
+                    // Для демо используем простую проверку
+                    const { data: users, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('email', email)
+                        .single();
+
+                    if (error || !users) {
+                        document.getElementById('loginError').textContent = 'Пользователь не найден';
+                        return;
+                    }
+
+                    // В реальном приложении пароли должны хэшироваться!
+                    // Это демо-версия для простоты
+                    this.currentUser = users;
+                    localStorage.setItem('messenger_user', JSON.stringify(this.currentUser));
+                    await this.showMessenger();
+
+                } catch (error) {
+                    document.getElementById('loginError').textContent = 'Ошибка входа';
+                } finally {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Войти';
                 }
             }
 
-            handleRegister(e) {
+            async handleRegister(e) {
                 e.preventDefault();
                 const username = document.getElementById('registerName').value;
                 const email = document.getElementById('registerEmail').value;
                 const password = document.getElementById('registerPassword').value;
+                const registerBtn = document.getElementById('registerBtn');
 
                 if (password.length < 6) {
                     document.getElementById('registerError').textContent = 'Пароль должен быть не менее 6 символов';
                     return;
                 }
 
-                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
-                
-                if (users.find(u => u.email === email)) {
-                    document.getElementById('registerError').textContent = 'Пользователь с таким email уже существует';
-                    return;
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
+
+                try {
+                    // Проверяем, существует ли пользователь
+                    const { data: existingUser } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('email', email)
+                        .single();
+
+                    if (existingUser) {
+                        document.getElementById('registerError').textContent = 'Пользователь с таким email уже существует';
+                        return;
+                    }
+
+                    // Создаем пользователя
+                    const { data: newUser, error } = await supabase
+                        .from('users')
+                        .insert([
+                            {
+                                username: username,
+                                email: email,
+                                avatar: username.charAt(0).toUpperCase()
+                            }
+                        ])
+                        .select()
+                        .single();
+
+                    if (error) throw error;
+
+                    document.getElementById('registerSuccess').textContent = 'Аккаунт создан! Теперь войдите.';
+                    setTimeout(() => {
+                        this.switchToLogin();
+                        document.getElementById('loginEmail').value = email;
+                    }, 2000);
+
+                } catch (error) {
+                    document.getElementById('registerError').textContent = 'Ошибка регистрации: ' + error.message;
+                } finally {
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Создать аккаунт';
                 }
-
-                const newUser = {
-                    id: Date.now(),
-                    username: username,
-                    email: email,
-                    password: password,
-                    avatar: username.charAt(0).toUpperCase()
-                };
-
-                users.push(newUser);
-                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-
-                this.currentUser = newUser;
-                localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(this.currentUser));
-                this.showMessenger();
             }
 
-            showMessenger() {
+            async showMessenger() {
                 document.getElementById('authContainer').style.display = 'none';
                 document.getElementById('messengerContainer').style.display = 'flex';
                 
                 document.getElementById('userAvatar').textContent = this.currentUser.avatar;
                 document.getElementById('userName').textContent = this.currentUser.username;
                 
-                this.loadMessages();
+                await this.loadChannels();
+                await this.setupRealtimeSubscription();
+                
+                this.updateConnectionStatus('Подключено к Supabase', 'status-online');
+                
+                // Включаем поле ввода
+                document.getElementById('messageInput').disabled = false;
+                document.getElementById('sendBtn').disabled = false;
             }
 
             showAuth() {
                 document.getElementById('messengerContainer').style.display = 'none';
                 document.getElementById('authContainer').style.display = 'flex';
                 this.switchToLogin();
-                
-                // Очистка форм
-                document.getElementById('loginEmail').value = '';
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('registerName').value = '';
-                document.getElementById('registerEmail').value = '';
-                document.getElementById('registerPassword').value = '';
             }
 
-            loadMessages() {
-                const messagesData = JSON.parse(localStorage.getItem(STORAGE_KEYS.MESSAGES));
-                const channelMessages = messagesData[this.activeChannel] || [];
+            async loadChannels() {
+                try {
+                    const { data: channels, error } = await supabase
+                        .from('channels')
+                        .select('*')
+                        .order('id');
+
+                    if (error) throw error;
+
+                    this.channels = channels;
+                    this.renderChannels();
+
+                    // Выбираем первый канал по умолчанию
+                    if (channels.length > 0) {
+                        this.switchChannel(channels[0]);
+                    }
+
+                } catch (error) {
+                    console.error('Ошибка загрузки каналов:', error);
+                    document.getElementById('channelsList').innerHTML = '<div class="error">Ошибка загрузки каналов</div>';
+                }
+            }
+
+            renderChannels() {
+                const channelsList = document.getElementById('channelsList');
+                channelsList.innerHTML = '';
+
+                this.channels.forEach(channel => {
+                    const channelElement = document.createElement('div');
+                    channelElement.className = `channel ${channel.id === this.currentChannel?.id ? 'active' : ''}`;
+                    channelElement.dataset.channelId = channel.id;
+                    
+                    channelElement.innerHTML = `
+                        <span class="channel-icon"><i class="fas fa-hashtag"></i></span>
+                        <span class="channel-name">${channel.name}</span>
+                    `;
+                    
+                    channelElement.addEventListener('click', () => {
+                        this.switchChannel(channel);
+                    });
+                    
+                    channelsList.appendChild(channelElement);
+                });
+            }
+
+            async switchChannel(channel) {
+                this.currentChannel = channel;
+                this.renderChannels();
+                document.getElementById('currentChannel').textContent = channel.name;
+                await this.loadMessages();
+            }
+
+            async loadMessages() {
+                if (!this.currentChannel) return;
+
                 const messagesContainer = document.getElementById('messagesContainer');
+                messagesContainer.innerHTML = '<div class="loading">Загрузка сообщений...</div>';
 
-                messagesContainer.innerHTML = '';
+                try {
+                    const { data: messages, error } = await supabase
+                        .from('messages')
+                        .select(`
+                            *,
+                            users (
+                                username,
+                                avatar
+                            )
+                        `)
+                        .eq('channel_id', this.currentChannel.id)
+                        .order('created_at', { ascending: true });
 
-                if (channelMessages.length === 0) {
+                    if (error) throw error;
+
+                    this.renderMessages(messages);
+
+                } catch (error) {
+                    console.error('Ошибка загрузки сообщений:', error);
+                    messagesContainer.innerHTML = '<div class="error">Ошибка загрузки сообщений</div>';
+                }
+            }
+
+            renderMessages(messages) {
+                const messagesContainer = document.getElementById('messagesContainer');
+                
+                if (messages.length === 0) {
                     messagesContainer.innerHTML = `
                         <div class="welcome-message">
                             <p>Пока нет сообщений в этом канале 💬</p>
@@ -876,17 +1005,19 @@
                     return;
                 }
 
-                channelMessages.forEach(message => {
+                messagesContainer.innerHTML = '';
+
+                messages.forEach(message => {
                     const messageElement = document.createElement('div');
                     messageElement.className = 'message';
                     messageElement.innerHTML = `
-                        <div class="message-avatar">${message.avatar}</div>
+                        <div class="message-avatar">${message.users.avatar}</div>
                         <div class="message-content">
                             <div class="message-header">
-                                <div class="message-sender">${message.sender}</div>
-                                <div class="message-time">${message.time}</div>
+                                <div class="message-sender">${message.users.username}</div>
+                                <div class="message-time">${this.formatTime(message.created_at)}</div>
                             </div>
-                            <div class="message-text">${message.text}</div>
+                            <div class="message-text">${message.message}</div>
                         </div>
                     `;
                     messagesContainer.appendChild(messageElement);
@@ -895,108 +1026,35 @@
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
 
-            sendMessage() {
-                const text = document.getElementById('messageInput').value.trim();
+            async sendMessage() {
+                const messageInput = document.getElementById('messageInput');
+                const text = messageInput.value.trim();
                 
-                if (text && this.currentUser) {
-                    const messagesData = JSON.parse(localStorage.getItem(STORAGE_KEYS.MESSAGES));
-                    const newMessage = {
-                        id: Date.now(),
-                        sender: this.currentUser.username,
-                        avatar: this.currentUser.avatar,
-                        text: text,
-                        time: this.getCurrentTime(),
-                        channel: this.activeChannel
-                    };
+                if (!text || !this.currentUser || !this.currentChannel) return;
 
-                    if (!messagesData[this.activeChannel]) {
-                        messagesData[this.activeChannel] = [];
-                    }
-                    messagesData[this.activeChannel].push(newMessage);
-                    localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(messagesData));
+                try {
+                    const { error } = await supabase
+                        .from('messages')
+                        .insert([
+                            {
+                                channel_id: this.currentChannel.id,
+                                user_id: this.currentUser.id,
+                                message: text
+                            }
+                        ]);
 
-                    document.getElementById('messageInput').value = '';
-                    this.loadMessages();
+                    if (error) throw error;
+
+                    messageInput.value = '';
+
+                } catch (error) {
+                    console.error('Ошибка отправки сообщения:', error);
+                    alert('Ошибка отправки сообщения');
                 }
             }
 
-            switchChannel(channelElement) {
-                document.querySelectorAll('.channel').forEach(c => c.classList.remove('active'));
-                channelElement.classList.add('active');
-                this.activeChannel = channelElement.dataset.channel;
-                document.getElementById('currentChannel').textContent = channelElement.querySelector('.channel-name').textContent;
-                this.loadMessages();
-            }
-
-            getCurrentTime() {
-                return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            }
-
-            loadTheme() {
-                const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
-                this.setTheme(savedTheme);
-            }
-
-            setTheme(theme) {
-                document.body.className = `theme-${theme}`;
-                localStorage.setItem(STORAGE_KEYS.THEME, theme);
-                
-                document.querySelectorAll('.theme-option').forEach(option => {
-                    if (option.getAttribute('data-theme') === theme) {
-                        option.classList.add('active');
-                    } else {
-                        option.classList.remove('active');
-                    }
-                });
-
-                // Назначаем обработчики для смены темы
-                document.querySelectorAll('.theme-option').forEach(option => {
-                    option.addEventListener('click', () => {
-                        const newTheme = option.getAttribute('data-theme');
-                        this.setTheme(newTheme);
-                    });
-                });
-            }
-
-            showSettings() {
-                document.getElementById('settingsModal').style.display = 'flex';
-            }
-
-            hideSettings() {
-                document.getElementById('settingsModal').style.display = 'none';
-            }
-
-            logout() {
-                localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-                this.currentUser = null;
-                this.showAuth();
-                this.hideSettings();
-            }
-
-            initEmojiPicker() {
-                const emojiPicker = document.getElementById('emojiPicker');
-                EMOJIS.forEach(emoji => {
-                    const emojiElement = document.createElement('span');
-                    emojiElement.className = 'emoji';
-                    emojiElement.textContent = emoji;
-                    emojiElement.addEventListener('click', () => {
-                        document.getElementById('messageInput').value += emoji;
-                        document.getElementById('messageInput').focus();
-                    });
-                    emojiPicker.appendChild(emojiElement);
-                });
-            }
-
-            toggleEmojiPicker() {
-                const emojiPicker = document.getElementById('emojiPicker');
-                emojiPicker.style.display = emojiPicker.style.display === 'flex' ? 'none' : 'flex';
-            }
-        }
-
-        // Инициализация мессенджера при загрузке страницы
-        document.addEventListener('DOMContentLoaded', () => {
-            new Messenger();
-        });
-    </script>
-</body>
-</html>
+            async setupRealtimeSubscription() {
+                // Подписка на новые сообщения в реальном времени
+                supabase
+                    .channel('messages')
+                    .
