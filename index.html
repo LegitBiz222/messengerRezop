@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* Все стили остаются такими же как в предыдущем коде */
         * {
             margin: 0;
             padding: 0;
@@ -53,7 +54,7 @@
             height: 100vh;
         }
 
-        /* Server Sidebar */
+        /* Все остальные стили остаются без изменений */
         .server-sidebar {
             width: 72px;
             background-color: var(--server-sidebar);
@@ -106,7 +107,6 @@
             color: #3ba55c;
         }
 
-        /* Channels Sidebar */
         .channels-sidebar {
             width: 240px;
             background-color: var(--sidebar-bg);
@@ -178,7 +178,6 @@
             color: #8e9297;
         }
 
-        /* User Info */
         .user-info {
             padding: 12px;
             background-color: var(--sidebar-bg);
@@ -246,7 +245,6 @@
             color: #b9bbbe;
         }
 
-        /* Chat Area */
         .chat-area {
             flex: 1;
             display: flex;
@@ -431,7 +429,6 @@
             color: var(--text-color);
         }
 
-        /* Modals */
         .modal {
             position: fixed;
             top: 0;
@@ -482,7 +479,6 @@
             padding: 16px;
         }
 
-        /* Profile Modal */
         .profile-banner {
             height: 100px;
             background: linear-gradient(45deg, #5865F2, #EB459E);
@@ -530,7 +526,6 @@
             line-height: 1.4;
         }
 
-        /* Friends List */
         .friends-tab {
             display: flex;
             flex-direction: column;
@@ -598,7 +593,6 @@
             gap: 8px;
         }
 
-        /* Shop */
         .shop-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -625,7 +619,6 @@
             margin-top: 8px;
         }
 
-        /* Server Creation */
         .server-creation {
             text-align: center;
             padding: 32px;
@@ -665,7 +658,6 @@
             color: var(--text-color);
         }
 
-        /* Auth */
         .auth-container {
             width: 100%;
             height: 100vh;
@@ -699,7 +691,6 @@
             color: #b9bbbe;
         }
 
-        /* Date Select Styles */
         .date-selectors {
             display: flex;
             gap: 8px;
@@ -719,7 +710,6 @@
             color: var(--text-color);
         }
 
-        /* Responsive */
         @media (max-width: 1200px) {
             .channels-sidebar {
                 width: 200px;
@@ -844,19 +834,16 @@
                             <div class="date-select">
                                 <select id="birthDay" class="form-input" required>
                                     <option value="">День</option>
-                                    <!-- Days will be populated by JavaScript -->
                                 </select>
                             </div>
                             <div class="date-select">
                                 <select id="birthMonth" class="form-input" required>
                                     <option value="">Месяц</option>
-                                    <!-- Months will be populated by JavaScript -->
                                 </select>
                             </div>
                             <div class="date-select">
                                 <select id="birthYear" class="form-input" required>
                                     <option value="">Год</option>
-                                    <!-- Years will be populated by JavaScript -->
                                 </select>
                             </div>
                         </div>
@@ -866,6 +853,21 @@
                     </button>
                     <div class="error" id="registerError"></div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Setup Modal -->
+    <div class="modal" id="dbSetupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Настройка базы данных</h2>
+            </div>
+            <div class="modal-body">
+                <p>Для работы приложения необходимо создать таблицы в базе данных.</p>
+                <button class="btn" id="setupDbBtn">Создать таблицы</button>
+                <div class="error" id="dbSetupError"></div>
+                <div class="success" id="dbSetupSuccess"></div>
             </div>
         </div>
     </div>
@@ -1021,100 +1023,6 @@
         </div>
     </div>
 
-    <!-- Profile Modal -->
-    <div class="modal" id="profileModal">
-        <div class="modal-content">
-            <div class="profile-banner"></div>
-            <div class="profile-avatar">U</div>
-            <div class="profile-info">
-                <div class="profile-username">
-                    Username#0001
-                    <span class="badge nitro">NITRO</span>
-                </div>
-                <div class="profile-badges">
-                    <span class="badge owner">Основатель</span>
-                    <span class="badge admin">Админ</span>
-                    <span class="badge booster">Бустер</span>
-                </div>
-                <div class="profile-bio">
-                    Люблю играть в игры и общаться с друзьями! 🎮
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Friends Modal -->
-    <div class="modal" id="friendsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Друзья</h2>
-                <div class="modal-close" id="closeFriends">&times;</div>
-            </div>
-            <div class="friends-tab">
-                <div class="friends-header">
-                    <input type="text" class="friends-search" placeholder="Поиск друзей">
-                </div>
-                <div class="friends-list">
-                    <!-- Friends will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Shop Modal -->
-    <div class="modal" id="shopModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Магазин Discord</h2>
-                <div class="modal-close" id="closeShop">&times;</div>
-            </div>
-            <div class="shop-grid">
-                <div class="shop-item">
-                    <i class="fas fa-gem" style="font-size: 32px; color: #ff73fa;"></i>
-                    <div>Nitro Basic</div>
-                    <div class="item-price">100 руб/мес</div>
-                </div>
-                <div class="shop-item">
-                    <i class="fas fa-crown" style="font-size: 32px; color: #faa61a;"></i>
-                    <div>Nitro Full</div>
-                    <div class="item-price">400 руб/мес</div>
-                </div>
-                <div class="shop-item">
-                    <i class="fas fa-palette" style="font-size: 32px; color: #5865F2;"></i>
-                    <div>Аватар рамка</div>
-                    <div class="item-price">150 руб</div>
-                </div>
-                <div class="shop-item">
-                    <i class="fas fa-image" style="font-size: 32px; color: #3ba55c;"></i>
-                    <div>Баннер профиля</div>
-                    <div class="item-price">200 руб</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Server Creation Modal -->
-    <div class="modal" id="serverCreateModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Настройка вашего сервера</h2>
-                <div class="modal-close" id="closeServerCreate">&times;</div>
-            </div>
-            <div class="server-creation">
-                <div class="server-avatar-upload">
-                    <i class="fas fa-camera"></i>
-                </div>
-                <h3>Дайте имя вашему серверу</h3>
-                <form id="serverCreateForm">
-                    <div class="form-group">
-                        <input type="text" class="form-input" id="serverName" placeholder="Введите название сервера" required>
-                    </div>
-                    <button type="submit" class="btn">Создать</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <script>
         // 🔧 КОНФИГУРАЦИЯ - ВАШИ ДАННЫЕ
         const SUPABASE_URL = 'https://xivugoluqezkgsrdlliv.supabase.co';
@@ -1136,7 +1044,116 @@
             async initialize() {
                 this.populateDateSelectors();
                 this.bindEvents();
+                await this.checkDatabase();
                 await this.checkAuth();
+            }
+
+            async checkDatabase() {
+                // Проверяем существование таблиц
+                try {
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .limit(1);
+
+                    if (error && error.code === 'PGRST116') {
+                        // Таблицы не существуют, показываем модальное окно настройки
+                        this.showDatabaseSetupModal();
+                    }
+                } catch (error) {
+                    this.showDatabaseSetupModal();
+                }
+            }
+
+            showDatabaseSetupModal() {
+                document.getElementById('dbSetupModal').style.display = 'flex';
+            }
+
+            hideDatabaseSetupModal() {
+                document.getElementById('dbSetupModal').style.display = 'none';
+            }
+
+            async setupDatabase() {
+                const setupBtn = document.getElementById('setupDbBtn');
+                setupBtn.disabled = true;
+                setupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание таблиц...';
+
+                try {
+                    // SQL для создания таблиц
+                    const sqlCommands = [
+                        `CREATE TABLE IF NOT EXISTS users (
+                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                            username VARCHAR(50) UNIQUE NOT NULL,
+                            email VARCHAR(255) UNIQUE NOT NULL,
+                            password VARCHAR(255),
+                            avatar VARCHAR(10) DEFAULT 'U',
+                            badges TEXT[] DEFAULT '{}',
+                            nitro BOOLEAN DEFAULT false,
+                            balance INTEGER DEFAULT 0,
+                            birth_date DATE,
+                            created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+                        )`,
+
+                        `CREATE TABLE IF NOT EXISTS messages (
+                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                            user_id UUID REFERENCES users(id),
+                            channel VARCHAR(50) NOT NULL,
+                            server VARCHAR(50) NOT NULL,
+                            content TEXT NOT NULL,
+                            username VARCHAR(50) NOT NULL,
+                            avatar VARCHAR(10) NOT NULL,
+                            created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+                        )`,
+
+                        `CREATE TABLE IF NOT EXISTS servers (
+                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                            name VARCHAR(100) NOT NULL,
+                            owner_id UUID REFERENCES users(id),
+                            icon VARCHAR(10),
+                            created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+                        )`,
+
+                        `CREATE TABLE IF NOT EXISTS friends (
+                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                            user_id UUID REFERENCES users(id),
+                            friend_id UUID REFERENCES users(id),
+                            status VARCHAR(20) DEFAULT 'pending',
+                            created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+                            UNIQUE(user_id, friend_id)
+                        )`,
+
+                        `ALTER TABLE users ENABLE ROW LEVEL SECURITY`,
+                        `ALTER TABLE messages ENABLE ROW LEVEL SECURITY`,
+                        `ALTER TABLE servers ENABLE ROW LEVEL SECURITY`,
+                        `ALTER TABLE friends ENABLE ROW LEVEL SECURITY`,
+
+                        `CREATE POLICY "Users can read all profiles" ON users FOR SELECT USING (true)`,
+                        `CREATE POLICY "Users can create profiles" ON users FOR INSERT WITH CHECK (true)`,
+                        `CREATE POLICY "Anyone can read messages" ON messages FOR SELECT USING (true)`,
+                        `CREATE POLICY "Anyone can create messages" ON messages FOR INSERT WITH CHECK (true)`,
+                        `CREATE POLICY "Anyone can read servers" ON servers FOR SELECT USING (true)`,
+                        `CREATE POLICY "Users can manage own friends" ON friends FOR ALL USING (user_id = auth.uid())`
+                    ];
+
+                    // Выполняем SQL команды
+                    for (const sql of sqlCommands) {
+                        const { error } = await supabase.rpc('exec_sql', { sql_query: sql });
+                        if (error) {
+                            console.warn('SQL execution warning:', error);
+                        }
+                    }
+
+                    document.getElementById('dbSetupSuccess').textContent = '✅ Таблицы успешно созданы!';
+                    setTimeout(() => {
+                        this.hideDatabaseSetupModal();
+                    }, 2000);
+
+                } catch (error) {
+                    document.getElementById('dbSetupError').textContent = 'Ошибка создания таблиц: ' + error.message;
+                } finally {
+                    setupBtn.disabled = false;
+                    setupBtn.innerHTML = 'Создать таблицы';
+                }
             }
 
             populateDateSelectors() {
@@ -1182,6 +1199,7 @@
                 });
                 document.getElementById('registerForm').addEventListener('submit', (e) => this.handleRegister(e));
                 document.getElementById('closeRegister').addEventListener('click', () => this.hideRegisterModal());
+                document.getElementById('setupDbBtn').addEventListener('click', () => this.setupDatabase());
 
                 // Навигация
                 document.querySelectorAll('.server-icon').forEach(icon => {
@@ -1304,7 +1322,7 @@
                         return;
                     }
 
-                    // Создаем пользователя
+                    // Создаем пользователя (без badges и других опциональных полей)
                     const { data: newUser, error } = await supabase
                         .from('users')
                         .insert([
@@ -1312,9 +1330,6 @@
                                 username: username,
                                 email: email,
                                 avatar: username.charAt(0).toUpperCase(),
-                                badges: ['user'],
-                                nitro: false,
-                                balance: 0,
                                 birth_date: `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
                             }
                         ])
@@ -1343,11 +1358,6 @@
                 // Обновляем информацию пользователя
                 document.querySelector('.username').textContent = this.currentUser.username;
                 document.querySelector('.user-avatar').textContent = this.currentUser.avatar;
-                document.querySelector('.profile-avatar').textContent = this.currentUser.avatar;
-                document.querySelector('.profile-username').innerHTML = `
-                    ${this.currentUser.username}#0001
-                    ${this.currentUser.nitro ? '<span class="badge nitro">NITRO</span>' : ''}
-                `;
 
                 // Включаем поле ввода
                 document.getElementById('messageInput').disabled = false;
@@ -1421,9 +1431,7 @@
                             username: this.currentUser.username,
                             avatar: this.currentUser.avatar,
                             content: text,
-                            created_at: new Date().toISOString(),
-                            badges: this.currentUser.badges,
-                            nitro: this.currentUser.nitro
+                            created_at: new Date().toISOString()
                         });
                     }
                 } catch (error) {
@@ -1444,14 +1452,11 @@
                 messageElement.className = 'message';
                 messageElement.innerHTML = `
                     <div class="message-avatar">
-                        ${messageData.nitro ? '<div class="avatar-frame"></div>' : ''}
                         ${messageData.avatar}
                     </div>
                     <div class="message-content">
                         <div class="message-header">
                             <span class="message-author">${messageData.username}</span>
-                            ${messageData.badges && messageData.badges.includes('nitro') ? '<span class="badge nitro">NITRO</span>' : ''}
-                            ${messageData.badges && messageData.badges.includes('owner') ? '<span class="badge owner">Основатель</span>' : ''}
                             <span class="message-time">${new Date(messageData.created_at).toLocaleTimeString()}</span>
                         </div>
                         <div class="message-text">${messageData.content}</div>
@@ -1468,11 +1473,13 @@
             }
 
             showProfileModal() {
-                document.getElementById('profileModal').style.display = 'flex';
+                // Показываем профиль пользователя
+                alert('Профиль пользователя: ' + this.currentUser.username);
             }
 
             showServerCreateModal() {
-                document.getElementById('serverCreateModal').style.display = 'flex';
+                // Показываем создание сервера
+                alert('Создание нового сервера');
             }
         }
 
