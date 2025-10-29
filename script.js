@@ -2,278 +2,35 @@ class MaxMessenger {
     constructor() {
         this.supabase = null;
         this.currentUser = null;
-        this.currentServer = null;
-        this.currentChannel = null;
-        this.currentDM = null;
         this.servers = [];
         this.friends = [];
         this.emojis = ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','💩','👻','💀','☠️','👽','👾','🤖','🎃','😺','😸','😹','😻','😼','😽','🙀','😿','😾'];
-        
-        this.init();
+        this.useLocalStorage = true;
     }
 
     async init() {
+        console.log('Initializing Max Messenger...');
         await this.initializeSupabase();
         this.setupEventListeners();
         this.loadEmojis();
         this.checkPreviousAuth();
+        this.applySavedTheme();
     }
 
     async initializeSupabase() {
-        // Замените на ваши данные из Supabase
-        const SUPABASE_URL = 'https://your-project.supabase.co';
-        const SUPABASE_ANON_KEY = 'your-anon-key';
-        
         try {
-            this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase initialized');
+            // Для демо используем localStorage
+            console.log('Using localStorage mode');
+            this.initLocalStorage();
         } catch (error) {
             console.error('Supabase init error:', error);
             this.fallbackToLocalStorage();
         }
     }
 
-    setupEventListeners() {
-        // Аутентификация - ОБНОВЛЕННЫЙ КОД
-        document.getElementById('login-form').addEventListener('submit', (e) => this.handleLogin(e));
-        document.getElementById('register-form').addEventListener('submit', (e) => this.handleRegister(e));
-        
-        // Вкладки аутентификации - ИСПРАВЛЕННЫЙ КОД
-        document.querySelectorAll('.auth-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => this.switchAuthTab(e.target));
-        });
-        
-        // Вкладки каналов
-        document.querySelectorAll('.channel-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => this.switchChannelTab(e.target));
-        });
-
-        // Серверы
-        document.getElementById('add-server-btn').addEventListener('click', () => this.showCreateServerModal());
-        document.getElementById('create-server-btn').addEventListener('click', () => this.createServer());
-
-        // Друзья
-        document.getElementById('add-friend-btn').addEventListener('click', () => this.addFriend());
-        document.getElementById('friend-username-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.addFriend();
-        });
-
-        // Сообщения
-        document.getElementById('send-btn').addEventListener('click', () => this.sendMessage());
-        document.getElementById('message-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.sendMessage();
-        });
-
-        // Эмодзи
-        document.getElementById('emoji-btn').addEventListener('click', () => this.toggleEmojiPicker());
-        
-        // Настройки
-        document.getElementById('settings-btn').addEventListener('click', () => this.showSettings());
-        document.querySelectorAll('.theme-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.changeTheme(e.target));
-        });
-
-        // Сохранение профиля
-        document.getElementById('save-profile-btn').addEventListener('click', () => this.saveProfile());
-
-        // Модальные окна
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) this.hideModal(modal);
-            });
-        });
-
-        // Закрытие модальных окон при клике на крестик
-        const closeButtons = document.querySelectorAll('.modal .close');
-        if (closeButtons.length === 0) {
-            // Добавляем крестики если их нет
-            document.querySelectorAll('.modal .modal-content').forEach(content => {
-                const closeBtn = document.createElement('span');
-                closeBtn.className = 'close';
-                closeBtn.innerHTML = '&times;';
-                closeBtn.style.cssText = `
-                    position: absolute;
-                    top: 15px;
-                    right: 15px;
-                    font-size: 24px;
-                    cursor: pointer;
-                    color: var(--text-secondary);
-                `;
-                closeBtn.addEventListener('click', () => {
-                    this.hideModal(content.closest('.modal'));
-                });
-                content.style.position = 'relative';
-                content.appendChild(closeBtn);
-            });
-        } else {
-            closeButtons.forEach(close => {
-                close.addEventListener('click', (e) => {
-                    this.hideModal(e.target.closest('.modal'));
-                });
-            });
-        }
-    }
-
-    // ИСПРАВЛЕННЫЙ МЕТОД ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК
-    switchAuthTab(clickedTab) {
-        const tabName = clickedTab.dataset.tab;
-        
-        // Убираем активный класс у всех вкладок и форм
-        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-        
-        // Добавляем активный класс выбранной вкладке и форме
-        clickedTab.classList.add('active');
-        document.getElementById(`${tabName}-form`).classList.add('active');
-        
-        console.log('Переключено на вкладку:', tabName); // Для отладки
-    }
-
-    switchChannelTab(clickedTab) {
-        const tabName = clickedTab.dataset.tab;
-        
-        document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        clickedTab.classList.add('active');
-        document.getElementById(`${tabName}-tab`).classList.add('active');
-    }
-
-    async handleLogin(e) {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
-        this.showLoading(true);
-
-        try {
-            if (this.useLocalStorage) {
-                // Логин через localStorage
-                const users = JSON.parse(localStorage.getItem('messenger_users')) || [];
-                const user = users.find(u => u.email === email && u.password === password);
-                
-                if (user) {
-                    this.currentUser = user;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    this.showNotification('Успешный вход!', 'success');
-                    await this.delay(1000); // Задержка для показа уведомления
-                    this.showApp();
-                    this.loadUserData();
-                } else {
-                    this.showNotification('Неверный email или пароль', 'error');
-                }
-            } else {
-                // Логин через Supabase
-                const { data, error } = await this.supabase.auth.signInWithPassword({
-                    email,
-                    password
-                });
-
-                if (error) {
-                    this.showNotification('Ошибка входа: ' + error.message, 'error');
-                } else {
-                    this.currentUser = data.user;
-                    this.showNotification('Успешный вход!', 'success');
-                    await this.delay(1000);
-                    await this.loadUserData();
-                    this.showApp();
-                }
-            }
-        } catch (error) {
-            this.showNotification('Ошибка при входе', 'error');
-        } finally {
-            this.showLoading(false);
-        }
-    }
-
-    async handleRegister(e) {
-        e.preventDefault();
-        const username = document.getElementById('register-username').value;
-        const email = document.getElementById('register-email').value;
-        const password = document.getElementById('register-password').value;
-
-        this.showLoading(true);
-
-        try {
-            if (this.useLocalStorage) {
-                const users = JSON.parse(localStorage.getItem('messenger_users')) || [];
-                const existingUser = users.find(u => u.email === email || u.username === username);
-                
-                if (existingUser) {
-                    this.showNotification('Пользователь с таким email или именем уже существует', 'error');
-                    return;
-                }
-
-                const newUser = {
-                    id: Date.now().toString(),
-                    username,
-                    email,
-                    password,
-                    avatar_url: '',
-                    badges: ['new_user'],
-                    status: 'online',
-                    created_at: new Date().toISOString()
-                };
-
-                users.push(newUser);
-                localStorage.setItem('messenger_users', JSON.stringify(users));
-                
-                this.showNotification('Регистрация успешна!', 'success');
-                await this.delay(1500);
-                
-                // Автоматически переключаем на вкладку входа
-                this.switchAuthTab(document.querySelector('.auth-tab[data-tab="login"]'));
-                
-                // Очищаем форму
-                document.getElementById('register-form').reset();
-                
-            } else {
-                // Регистрация через Supabase
-                const { data, error } = await this.supabase.auth.signUp({
-                    email,
-                    password
-                });
-
-                if (error) {
-                    this.showNotification('Ошибка регистрации: ' + error.message, 'error');
-                    return;
-                }
-
-                const { error: profileError } = await this.supabase
-                    .from('users')
-                    .insert([
-                        {
-                            id: data.user.id,
-                            username,
-                            email,
-                            avatar_url: '',
-                            badges: ['early']
-                        }
-                    ]);
-
-                if (profileError) {
-                    this.showNotification('Ошибка создания профиля: ' + profileError.message, 'error');
-                } else {
-                    this.showNotification('Регистрация успешна! Проверьте email для подтверждения.', 'success');
-                    await this.delay(2000);
-                    this.switchAuthTab(document.querySelector('.auth-tab[data-tab="login"]'));
-                    document.getElementById('register-form').reset();
-                }
-            }
-        } catch (error) {
-            this.showNotification('Ошибка при регистрации', 'error');
-        } finally {
-            this.showLoading(false);
-        }
-    }
-
-    fallbackToLocalStorage() {
-        console.log('Using localStorage fallback');
-        this.useLocalStorage = true;
-        this.initLocalStorage();
-    }
-
     initLocalStorage() {
+        console.log('Initializing localStorage...');
+        
         if (!localStorage.getItem('messenger_users')) {
             const defaultUsers = [
                 {
@@ -295,9 +52,20 @@ class MaxMessenger {
                     badges: ['nitro'],
                     status: 'online',
                     created_at: new Date().toISOString()
+                },
+                {
+                    id: '3', 
+                    username: 'Мария',
+                    email: 'maria@example.com',
+                    password: '123456',
+                    avatar_url: '',
+                    badges: ['booster'],
+                    status: 'offline',
+                    created_at: new Date().toISOString()
                 }
             ];
             localStorage.setItem('messenger_users', JSON.stringify(defaultUsers));
+            console.log('Default users created');
         }
 
         if (!localStorage.getItem('messenger_servers')) {
@@ -307,12 +75,14 @@ class MaxMessenger {
                 owner_id: '1',
                 channels: [
                     { id: '1', name: 'общий', type: 'text' },
-                    { id: '2', name: 'музыка', type: 'text' }
+                    { id: '2', name: 'музыка', type: 'text' },
+                    { id: '3', name: 'игры', type: 'text' }
                 ],
-                members: ['1', '2'],
+                members: ['1', '2', '3'],
                 created_at: new Date().toISOString()
             };
             localStorage.setItem('messenger_servers', JSON.stringify([defaultServer]));
+            console.log('Default server created');
         }
 
         if (!localStorage.getItem('messenger_messages')) {
@@ -320,43 +90,295 @@ class MaxMessenger {
         }
 
         if (!localStorage.getItem('messenger_friends')) {
-            localStorage.setItem('messenger_friends', JSON.stringify([]));
+            // Создаем демо друзей
+            const friendships = [
+                { id: '1', user_id: '1', friend_id: '2', status: 'accepted' },
+                { id: '2', user_id: '1', friend_id: '3', status: 'accepted' }
+            ];
+            localStorage.setItem('messenger_friends', JSON.stringify(friendships));
         }
     }
 
-    checkPreviousAuth() {
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            this.currentUser = JSON.parse(savedUser);
-            this.showApp();
-            this.loadUserData();
+    setupEventListeners() {
+        console.log('Setting up event listeners...');
+        
+        // Ждем пока DOM полностью загрузится
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setupEventListenersAfterDOM());
         } else {
-            this.showAuth();
+            this.setupEventListenersAfterDOM();
         }
     }
 
-    showAuth() {
-        document.getElementById('auth-page').classList.remove('hidden');
-        document.getElementById('app').classList.add('hidden');
+    setupEventListenersAfterDOM() {
+        console.log('DOM loaded, setting up listeners...');
+
+        // Аутентификация
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+            console.log('Login form listener added');
+        } else {
+            console.error('Login form not found!');
+        }
+
+        if (registerForm) {
+            registerForm.addEventListener('submit', (e) => this.handleRegister(e));
+            console.log('Register form listener added');
+        } else {
+            console.error('Register form not found!');
+        }
+
+        // Вкладки аутентификации
+        const authTabs = document.querySelectorAll('.auth-tab');
+        console.log('Found auth tabs:', authTabs.length);
+        
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Auth tab clicked:', tab.dataset.tab);
+                this.switchAuthTab(tab);
+            });
+        });
+
+        // Вкладки каналов
+        const channelTabs = document.querySelectorAll('.channel-tab');
+        channelTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.switchChannelTab(tab);
+            });
+        });
+
+        // Серверы
+        const addServerBtn = document.getElementById('add-server-btn');
+        if (addServerBtn) {
+            addServerBtn.addEventListener('click', () => this.showCreateServerModal());
+        }
+
+        const createServerBtn = document.getElementById('create-server-btn');
+        if (createServerBtn) {
+            createServerBtn.addEventListener('click', () => this.createServer());
+        }
+
+        // Друзья
+        const addFriendBtn = document.getElementById('add-friend-btn');
+        if (addFriendBtn) {
+            addFriendBtn.addEventListener('click', () => this.addFriend());
+        }
+
+        const friendInput = document.getElementById('friend-username-input');
+        if (friendInput) {
+            friendInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.addFriend();
+            });
+        }
+
+        // Сообщения
+        const sendBtn = document.getElementById('send-btn');
+        if (sendBtn) {
+            sendBtn.addEventListener('click', () => this.sendMessage());
+        }
+
+        const messageInput = document.getElementById('message-input');
+        if (messageInput) {
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.sendMessage();
+            });
+        }
+
+        // Эмодзи
+        const emojiBtn = document.getElementById('emoji-btn');
+        if (emojiBtn) {
+            emojiBtn.addEventListener('click', () => this.toggleEmojiPicker());
+        }
+
+        // Настройки
+        const settingsBtn = document.getElementById('settings-btn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => this.showSettings());
+        }
+
+        // Тема оформления
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        themeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.changeTheme(btn);
+            });
+        });
+
+        // Сохранение профиля
+        const saveProfileBtn = document.getElementById('save-profile-btn');
+        if (saveProfileBtn) {
+            saveProfileBtn.addEventListener('click', () => this.saveProfile());
+        }
+
+        console.log('All event listeners setup complete');
     }
 
-    showApp() {
-        document.getElementById('auth-page').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        this.updateUserPanel();
+    switchAuthTab(clickedTab) {
+        console.log('Switching auth tab to:', clickedTab.dataset.tab);
+        
+        const tabName = clickedTab.dataset.tab;
+        
+        // Убираем активный класс у всех вкладок
+        document.querySelectorAll('.auth-tab').forEach(t => {
+            t.classList.remove('active');
+        });
+        
+        // Убираем активный класс у всех форм
+        document.querySelectorAll('.auth-form').forEach(f => {
+            f.classList.remove('active');
+        });
+        
+        // Добавляем активный класс выбранной вкладке
+        clickedTab.classList.add('active');
+        
+        // Показываем соответствующую форму
+        const targetForm = document.getElementById(`${tabName}-form`);
+        if (targetForm) {
+            targetForm.classList.add('active');
+            console.log('Form shown:', tabName);
+        } else {
+            console.error('Form not found:', `${tabName}-form`);
+        }
+    }
+
+    switchChannelTab(clickedTab) {
+        const tabName = clickedTab.dataset.tab;
+        
+        document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        clickedTab.classList.add('active');
+        
+        const targetTab = document.getElementById(`${tabName}-tab`);
+        if (targetTab) {
+            targetTab.classList.add('active');
+        }
+    }
+
+    async handleLogin(e) {
+        e.preventDefault();
+        console.log('Login attempt...');
+        
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        if (!email || !password) {
+            this.showNotification('Заполните все поля', 'error');
+            return;
+        }
+
+        this.showLoading(true);
+
+        try {
+            const users = JSON.parse(localStorage.getItem('messenger_users')) || [];
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                this.currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                this.showNotification(`Добро пожаловать, ${user.username}!`, 'success');
+                
+                await this.delay(1000);
+                this.showApp();
+                this.loadUserData();
+            } else {
+                this.showNotification('Неверный email или пароль', 'error');
+            }
+        } catch (error) {
+            this.showNotification('Ошибка при входе', 'error');
+            console.error('Login error:', error);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    async handleRegister(e) {
+        e.preventDefault();
+        console.log('Registration attempt...');
+        
+        const username = document.getElementById('register-username').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+
+        if (!username || !email || !password) {
+            this.showNotification('Заполните все поля', 'error');
+            return;
+        }
+
+        if (password.length < 6) {
+            this.showNotification('Пароль должен быть не менее 6 символов', 'error');
+            return;
+        }
+
+        this.showLoading(true);
+
+        try {
+            const users = JSON.parse(localStorage.getItem('messenger_users')) || [];
+            const existingUser = users.find(u => u.email === email || u.username === username);
+            
+            if (existingUser) {
+                this.showNotification('Пользователь с таким email или именем уже существует', 'error');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now().toString(),
+                username,
+                email,
+                password,
+                avatar_url: '',
+                badges: ['new_user'],
+                status: 'online',
+                created_at: new Date().toISOString()
+            };
+
+            users.push(newUser);
+            localStorage.setItem('messenger_users', JSON.stringify(users));
+            
+            this.showNotification('Регистрация успешна! Теперь вы можете войти.', 'success');
+            await this.delay(2000);
+            
+            // Переключаем на вкладку входа
+            const loginTab = document.querySelector('.auth-tab[data-tab="login"]');
+            if (loginTab) {
+                this.switchAuthTab(loginTab);
+            }
+            
+            // Очищаем форму регистрации
+            document.getElementById('register-form').reset();
+            
+        } catch (error) {
+            this.showNotification('Ошибка при регистрации', 'error');
+            console.error('Registration error:', error);
+        } finally {
+            this.showLoading(false);
+        }
     }
 
     showLoading(show) {
         const loading = document.getElementById('loading');
-        if (show) {
-            loading.classList.remove('hidden');
-        } else {
-            loading.classList.add('hidden');
+        if (loading) {
+            if (show) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
         }
     }
 
     showNotification(message, type = 'info', duration = 5000) {
         const container = document.getElementById('notifications');
+        if (!container) {
+            console.error('Notifications container not found');
+            return;
+        }
+
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         
@@ -378,7 +400,11 @@ class MaxMessenger {
         const closeBtn = notification.querySelector('.notification-close');
         closeBtn.addEventListener('click', () => {
             notification.classList.add('fade-out');
-            setTimeout(() => notification.remove(), 300);
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
         });
 
         container.appendChild(notification);
@@ -399,38 +425,66 @@ class MaxMessenger {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    // Другие методы (loadUserData, loadServers, loadFriends, и т.д.)
-    async loadUserData() {
-        if (this.useLocalStorage) {
-            await this.loadServers();
-            await this.loadFriends();
+    checkPreviousAuth() {
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            try {
+                this.currentUser = JSON.parse(savedUser);
+                this.showApp();
+                this.loadUserData();
+            } catch (error) {
+                console.error('Error parsing saved user:', error);
+                this.showAuth();
+            }
         } else {
-            // Supabase методы
-            await this.loadServers();
-            await this.loadFriends();
+            this.showAuth();
         }
+    }
+
+    showAuth() {
+        const authPage = document.getElementById('auth-page');
+        const app = document.getElementById('app');
+        
+        if (authPage) authPage.classList.remove('hidden');
+        if (app) app.classList.add('hidden');
+    }
+
+    showApp() {
+        const authPage = document.getElementById('auth-page');
+        const app = document.getElementById('app');
+        
+        if (authPage) authPage.classList.add('hidden');
+        if (app) app.classList.remove('hidden');
+        
+        this.updateUserPanel();
+    }
+
+    async loadUserData() {
+        await this.loadServers();
+        await this.loadFriends();
+        this.renderServers();
+        this.renderFriends();
     }
 
     async loadServers() {
-        if (this.useLocalStorage) {
-            this.servers = JSON.parse(localStorage.getItem('messenger_servers')) || [];
-            this.renderServers();
-        } else {
-            // Supabase реализация
-        }
+        this.servers = JSON.parse(localStorage.getItem('messenger_servers')) || [];
     }
 
     async loadFriends() {
-        if (this.useLocalStorage) {
-            this.friends = JSON.parse(localStorage.getItem('messenger_friends')) || [];
-            this.renderFriends();
-        } else {
-            // Supabase реализация
-        }
+        const friendships = JSON.parse(localStorage.getItem('messenger_friends')) || [];
+        const users = JSON.parse(localStorage.getItem('messenger_users')) || [];
+        
+        // Получаем друзей текущего пользователя
+        this.friends = friendships
+            .filter(f => f.user_id === this.currentUser?.id && f.status === 'accepted')
+            .map(f => users.find(u => u.id === f.friend_id))
+            .filter(Boolean);
     }
 
     renderServers() {
         const serverList = document.getElementById('server-list');
+        if (!serverList) return;
+
         serverList.innerHTML = '';
 
         this.servers.forEach(server => {
@@ -444,124 +498,57 @@ class MaxMessenger {
 
     renderFriends() {
         const friendsList = document.getElementById('friends-list');
+        if (!friendsList) return;
+
         friendsList.innerHTML = '';
 
-        // Для демо - используем пользователей из localStorage как друзей
-        const users = JSON.parse(localStorage.getItem('messenger_users')) || [];
-        const otherUsers = users.filter(user => user.id !== this.currentUser?.id);
-
-        otherUsers.forEach(user => {
+        this.friends.forEach(friend => {
             const friendElement = document.createElement('div');
             friendElement.className = 'friend-item';
             friendElement.innerHTML = `
-                <div class="user-avatar">${user.username.charAt(0).toUpperCase()}</div>
-                <span class="username">${user.username}</span>
-                <div class="user-status ${user.status}"></div>
+                <div class="user-avatar">${friend.username.charAt(0).toUpperCase()}</div>
+                <span class="username">${friend.username}</span>
+                <div class="user-status ${friend.status}"></div>
                 <div class="badges">
-                    ${user.badges.map(badge => `<span class="badge ${badge}">${badge}</span>`).join('')}
+                    ${friend.badges.map(badge => `<span class="badge ${badge}">${badge}</span>`).join('')}
                 </div>
             `;
-            friendElement.addEventListener('click', () => this.startDM(user));
+            friendElement.addEventListener('click', () => this.startDM(friend));
             friendsList.appendChild(friendElement);
         });
     }
 
     updateUserPanel() {
-        if (this.currentUser) {
-            document.getElementById('panel-username').textContent = this.currentUser.username;
-            // Для аватара используем первую букву имени
-            const avatarElement = document.getElementById('user-avatar');
+        if (!this.currentUser) return;
+
+        const usernameElement = document.getElementById('panel-username');
+        const statusElement = document.getElementById('panel-status');
+        const avatarElement = document.getElementById('user-avatar');
+
+        if (usernameElement) usernameElement.textContent = this.currentUser.username;
+        if (statusElement) statusElement.textContent = this.currentUser.status;
+        
+        if (avatarElement) {
             if (avatarElement.tagName === 'IMG') {
                 avatarElement.alt = this.currentUser.username;
-                // Можно добавить заглушку для изображения
+            } else {
+                avatarElement.textContent = this.currentUser.username.charAt(0).toUpperCase();
             }
         }
     }
 
-    // Заглушки для остальных методов
-    async createServer() {
-        const input = document.getElementById('server-name-input');
-        const name = input.value.trim();
+    applySavedTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'gray';
+        document.body.className = `theme-${savedTheme}`;
         
-        if (!name) {
-            this.showNotification('Введите название сервера', 'warning');
-            return;
-        }
-
-        this.showNotification(`Сервер "${name}" создан!`, 'success');
-        this.hideModal(document.getElementById('server-create-modal'));
-        input.value = '';
-    }
-
-    async addFriend() {
-        const input = document.getElementById('friend-username-input');
-        const username = input.value.trim();
-        
-        if (!username) {
-            this.showNotification('Введите имя пользователя', 'warning');
-            return;
-        }
-
-        this.showNotification(`Запрос дружбы отправлен пользователю ${username}`, 'success');
-        input.value = '';
-    }
-
-    async sendMessage() {
-        const input = document.getElementById('message-input');
-        const content = input.value.trim();
-        
-        if (!content) return;
-
-        this.showNotification('Сообщение отправлено', 'success');
-        input.value = '';
-    }
-
-    showCreateServerModal() {
-        this.showModal(document.getElementById('server-create-modal'));
-    }
-
-    showSettings() {
-        this.showModal(document.getElementById('settings-modal'));
-        this.loadSettings();
-    }
-
-    loadSettings() {
-        if (this.currentUser) {
-            document.getElementById('settings-username').value = this.currentUser.username;
+        const themeBtn = document.querySelector(`.theme-btn[data-theme="${savedTheme}"]`);
+        if (themeBtn) {
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            themeBtn.classList.add('active');
         }
     }
 
-    saveProfile() {
-        const username = document.getElementById('settings-username').value.trim();
-        if (username && this.currentUser) {
-            this.currentUser.username = username;
-            localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-            
-            // Обновляем пользователя в localStorage
-            const users = JSON.parse(localStorage.getItem('messenger_users')) || [];
-            const userIndex = users.findIndex(u => u.id === this.currentUser.id);
-            if (userIndex !== -1) {
-                users[userIndex].username = username;
-                localStorage.setItem('messenger_users', JSON.stringify(users));
-            }
-            
-            this.updateUserPanel();
-            this.showNotification('Профиль обновлен', 'success');
-            this.hideModal(document.getElementById('settings-modal'));
-        }
-    }
-
-    changeTheme(clickedButton) {
-        const theme = clickedButton.dataset.theme;
-        
-        document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
-        clickedButton.classList.add('active');
-        
-        document.body.className = `theme-${theme}`;
-        localStorage.setItem('theme', theme);
-        this.showNotification(`Тема изменена на ${theme}`, 'success');
-    }
-
+    // Остальные методы...
     loadEmojis() {
         const picker = document.getElementById('emoji-picker');
         if (!picker) return;
@@ -577,10 +564,67 @@ class MaxMessenger {
         });
     }
 
+    showCreateServerModal() {
+        this.showModal(document.getElementById('server-create-modal'));
+    }
+
+    showSettings() {
+        this.loadSettings();
+        this.showModal(document.getElementById('settings-modal'));
+    }
+
+    loadSettings() {
+        if (this.currentUser) {
+            const usernameInput = document.getElementById('settings-username');
+            if (usernameInput) {
+                usernameInput.value = this.currentUser.username;
+            }
+        }
+    }
+
+    saveProfile() {
+        const usernameInput = document.getElementById('settings-username');
+        if (!usernameInput || !this.currentUser) return;
+
+        const username = usernameInput.value.trim();
+        if (!username) {
+            this.showNotification('Введите имя пользователя', 'error');
+            return;
+        }
+
+        this.currentUser.username = username;
+        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+
+        // Обновляем в общем списке пользователей
+        const users = JSON.parse(localStorage.getItem('messenger_users')) || [];
+        const userIndex = users.findIndex(u => u.id === this.currentUser.id);
+        if (userIndex !== -1) {
+            users[userIndex].username = username;
+            localStorage.setItem('messenger_users', JSON.stringify(users));
+        }
+
+        this.updateUserPanel();
+        this.showNotification('Профиль обновлен', 'success');
+        this.hideModal(document.getElementById('settings-modal'));
+    }
+
+    changeTheme(clickedButton) {
+        const theme = clickedButton.dataset.theme;
+        
+        document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+        clickedButton.classList.add('active');
+        
+        document.body.className = `theme-${theme}`;
+        localStorage.setItem('theme', theme);
+        this.showNotification(`Тема изменена на ${theme}`, 'success');
+    }
+
     insertEmoji(emoji) {
         const input = document.getElementById('message-input');
-        input.value += emoji;
-        input.focus();
+        if (input) {
+            input.value += emoji;
+            input.focus();
+        }
         this.toggleEmojiPicker();
     }
 
@@ -592,11 +636,15 @@ class MaxMessenger {
     }
 
     showModal(modal) {
-        modal.classList.add('active');
+        if (modal) {
+            modal.classList.add('active');
+        }
     }
 
     hideModal(modal) {
-        modal.classList.remove('active');
+        if (modal) {
+            modal.classList.remove('active');
+        }
     }
 
     startDM(user) {
@@ -606,21 +654,57 @@ class MaxMessenger {
     selectServer(server) {
         this.showNotification(`Выбран сервер: ${server.name}`, 'info');
     }
+
+    createServer() {
+        const input = document.getElementById('server-name-input');
+        if (!input) return;
+
+        const name = input.value.trim();
+        if (!name) {
+            this.showNotification('Введите название сервера', 'warning');
+            return;
+        }
+
+        this.showNotification(`Сервер "${name}" создан!`, 'success');
+        this.hideModal(document.getElementById('server-create-modal'));
+        input.value = '';
+    }
+
+    addFriend() {
+        const input = document.getElementById('friend-username-input');
+        if (!input) return;
+
+        const username = input.value.trim();
+        if (!username) {
+            this.showNotification('Введите имя пользователя', 'warning');
+            return;
+        }
+
+        this.showNotification(`Запрос дружбы отправлен пользователю ${username}`, 'success');
+        input.value = '';
+    }
+
+    sendMessage() {
+        const input = document.getElementById('message-input');
+        if (!input) return;
+
+        const content = input.value.trim();
+        if (!content) return;
+
+        this.showNotification('Сообщение отправлено', 'success');
+        input.value = '';
+    }
+
+    fallbackToLocalStorage() {
+        console.log('Falling back to localStorage');
+        this.useLocalStorage = true;
+        this.initLocalStorage();
+    }
 }
 
 // Инициализация приложения
-let app;
-document.addEventListener('DOMContentLoaded', () => {
-    app = new MaxMessenger();
-    
-    // Восстанавливаем тему из localStorage
-    const savedTheme = localStorage.getItem('theme') || 'gray';
-    document.body.className = `theme-${savedTheme}`;
-    
-    // Устанавливаем активную кнопку темы
-    const themeBtn = document.querySelector(`.theme-btn[data-theme="${savedTheme}"]`);
-    if (themeBtn) {
-        document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
-        themeBtn.classList.add('active');
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded, initializing app...');
+    window.messengerApp = new MaxMessenger();
+    window.messengerApp.init();
 });
