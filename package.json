@@ -1,0 +1,18 @@
+{
+  "name": "max-messenger",
+  "version": "1.0.0",
+  "description": "Discord-like messenger for GitHub Pages",
+  "main": "script.js",
+  "scripts": {
+    "dev": "live-server --port=3000",
+    "build": "echo 'No build process needed'",
+    "deploy": "gh-pages -d ."
+  },
+  "keywords": ["messenger", "discord", "real-time", "chat"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "gh-pages": "^5.0.0"
+  }
+}
