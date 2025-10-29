@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="theme-gray">
+    <!-- Страница аутентификации -->
     <div id="auth-page" class="auth-container">
         <div class="auth-box">
             <h1>Max Messenger</h1>
@@ -31,65 +32,119 @@
         </div>
     </div>
 
+    <!-- Основное приложение -->
     <div id="app" class="app-container hidden">
         <!-- Боковая панель серверов -->
         <div class="servers-sidebar">
             <div class="server-list" id="server-list">
-                <!-- Серверы будут здесь -->
+                <div class="server-item active" data-server="home">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIyIDguOVYxMy4xQzIyIDEzLjYgMjEuNiAxNCAyMS4xIDE0SDIuOUMyLjQgMTQgMiAxMy42IDIgMTMuMVY4LjlDMiA4LjQgMi40IDggMi45IDhIMjEuMUMyMS42IDggMjIgOC40IDIyIDguOVoiIGZpbGw9IiNENEU3RkYiLz4KPHBhdGggZD0iTTEzLjUgMTcuNUgxMC41VjE0LjVIMTMuNVYxNy41WiIgZmlsbD0iI0Q0RTdGRiIvPgo8cGF0aCBkPSJNMTUuNSAxNC41VjE3LjVIMTguNVYxMC41TDEyIDZMNS41IDEwLjVWMTcuNUg4LjVWMTQuNUM4LjUgMTMuNCA5LjQgMTIuNSAxMC41IDEyLjVIMTMuNUMxNC42IDEyLjUgMTUuNSAxMy40IDE1LjUgMTQuNVoiIGZpbGw9IiNENEU3RkYiLz4KPC9zdmc+" alt="Home">
+                </div>
             </div>
-            <button class="add-server-btn" id="add-server-btn">+</button>
+            <div class="server-separator"></div>
+            <button class="add-server-btn" id="add-server-btn" title="Добавить сервер">+</button>
         </div>
 
         <!-- Основной интерфейс -->
         <div class="main-interface">
-            <!-- Боковая панель каналов и ЛС -->
+            <!-- Боковая панель каналов и друзей -->
             <div class="channels-sidebar">
-                <div class="server-header">
+                <div class="server-header" id="server-header">
                     <h3 id="current-server-name">Личные сообщения</h3>
                 </div>
                 
                 <div class="channels-tabs">
                     <button class="channel-tab active" data-tab="friends">Друзья</button>
-                    <button class="channel-tab" data-tab="servers">Серверы</button>
+                    <button class="channel-tab" data-tab="nitro">Nitro</button>
                 </div>
 
                 <div class="channels-content">
-                    <!-- Список друзей -->
+                    <!-- Вкладка друзей -->
                     <div class="friends-list tab-content active" id="friends-tab">
-                        <div class="section-header">ЛИЧНЫЕ СООБЩЕНИЯ</div>
+                        <div class="search-box">
+                            <input type="text" id="friends-search" placeholder="Найти или начать беседу">
+                        </div>
+                        
+                        <div class="section-header">
+                            <span>ЛИЧНЫЕ СООБЩЕНИЯ</span>
+                            <button class="section-action" id="new-dm-btn" title="Новое сообщение">+</button>
+                        </div>
                         <div id="dm-channels-list">
-                            <!-- ЛС с друзьями -->
+                            <!-- ЛС будут здесь -->
                         </div>
                         
-                        <div class="section-header">ДРУЗЬЯ</div>
+                        <div class="section-header">
+                            <span>ДРУЗЬЯ</span>
+                            <div class="friend-actions">
+                                <button class="section-action" id="add-friend-btn" title="Добавить друга">Добавить друга</button>
+                                <button class="section-action" id="pending-requests-btn" title="Запросы в друзья">
+                                    <span id="pending-count">0</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="friends-filter">
+                            <button class="filter-btn active" data-filter="all">Все</button>
+                            <button class="filter-btn" data-filter="online">В сети</button>
+                            <button class="filter-btn" data-filter="pending">Ожидание</button>
+                            <button class="filter-btn" data-filter="blocked">Заблокированные</button>
+                        </div>
+                        
                         <div id="friends-list">
-                            <!-- Список друзей -->
-                        </div>
-                        
-                        <div class="add-friend-section">
-                            <input type="text" id="friend-username-input" placeholder="Добавить друга">
-                            <button id="add-friend-btn">Добавить</button>
+                            <!-- Друзья будут здесь -->
                         </div>
                     </div>
 
-                    <!-- Список серверов -->
-                    <div class="servers-list tab-content" id="servers-tab">
-                        <div id="server-channels-list">
-                            <!-- Каналы серверов -->
+                    <!-- Вкладка Nitro -->
+                    <div class="nitro-tab tab-content" id="nitro-tab">
+                        <div class="nitro-header">
+                            <div class="nitro-icon">🚀</div>
+                            <h3>Max Messenger Nitro</h3>
+                            <p>Премиум возможности для вашего аккаунта</p>
                         </div>
+                        <div class="nitro-features">
+                            <div class="feature">
+                                <div class="feature-icon">🎨</div>
+                                <div class="feature-text">
+                                    <h4>Кастомные аватарки</h4>
+                                    <p>Загружайте анимированные аватарки</p>
+                                </div>
+                            </div>
+                            <div class="feature">
+                                <div class="feature-icon">🖼️</div>
+                                <div class="feature-text">
+                                    <h4>Профильные баннеры</h4>
+                                    <p>Настройте внешний вид профиля</p>
+                                </div>
+                            </div>
+                            <div class="feature">
+                                <div class="feature-icon">🎭</div>
+                                <div class="feature-text">
+                                    <h4>Специальные бейджи</h4>
+                                    <p>Получите эксклюзивные значки</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="nitro-upgrade-btn" id="nitro-upgrade-btn">Активировать Nitro</button>
                     </div>
                 </div>
 
+                <!-- Панель пользователя -->
                 <div class="user-panel">
                     <div class="user-info" id="current-user-panel">
-                        <img class="user-avatar" id="user-avatar" src="" alt="Avatar">
+                        <div class="user-avatar-container">
+                            <div class="user-avatar" id="user-avatar">U</div>
+                            <div class="user-status-indicator online"></div>
+                        </div>
                         <div class="user-details">
                             <span class="username" id="panel-username">Username</span>
-                            <span class="user-status" id="panel-status">online</span>
+                            <span class="user-discriminator" id="panel-discriminator">#0000</span>
                         </div>
                     </div>
                     <div class="user-controls">
-                        <button id="settings-btn">⚙️</button>
+                        <button class="control-btn" id="mic-btn" title="Микрофон">🎤</button>
+                        <button class="control-btn" id="headphones-btn" title="Наушники">🎧</button>
+                        <button class="control-btn" id="settings-btn" title="Настройки">⚙️</button>
                     </div>
                 </div>
             </div>
@@ -98,32 +153,57 @@
             <div class="chat-area">
                 <div class="chat-header">
                     <div id="chat-header-info">
+                        <div class="chat-type-icon">👤</div>
                         <span id="current-chat-name">Выберите чат</span>
                     </div>
                     <div class="chat-controls">
-                        <button id="emoji-btn">😊</button>
-                        <button id="members-toggle">👥</button>
+                        <button class="chat-control-btn" id="call-btn" title="Начать звонок">📞</button>
+                        <button class="chat-control-btn" id="video-call-btn" title="Начать видео-звонок">📹</button>
+                        <button class="chat-control-btn" id="pin-btn" title="Закрепленные сообщения">📌</button>
+                        <button class="chat-control-btn" id="members-toggle" title="Список участников">👥</button>
+                        <div class="search-chat">
+                            <input type="text" placeholder="Поиск" class="search-input">
+                        </div>
+                        <button class="chat-control-btn" id="inbox-btn" title="Упоминания">@</button>
+                        <button class="chat-control-btn" id="help-btn" title="Справка">?</button>
                     </div>
                 </div>
                 
+                <!-- Контейнер сообщений -->
                 <div class="messages-container" id="messages-container">
-                    <!-- Сообщения будут здесь -->
+                    <div class="welcome-message">
+                        <div class="welcome-icon">👋</div>
+                        <h3>Добро пожаловать в Max Messenger!</h3>
+                        <p>Выберите чат чтобы начать общение</p>
+                    </div>
                 </div>
                 
+                <!-- Ввод сообщения -->
                 <div class="message-input-container">
                     <div class="emoji-picker hidden" id="emoji-picker">
                         <!-- Эмодзи будут здесь -->
                     </div>
                     <div class="input-wrapper">
-                        <input type="text" id="message-input" placeholder="Напишите сообщение...">
-                        <button id="send-btn">➤</button>
+                        <button class="input-action-btn" id="emoji-btn">😊</button>
+                        <button class="input-action-btn" id="attach-btn">📎</button>
+                        <div class="message-input-wrapper">
+                            <input type="text" id="message-input" placeholder="Написать сообщение...">
+                            <div class="input-actions">
+                                <button class="input-action-btn" id="gif-btn">GIF</button>
+                                <button class="input-action-btn" id="sticker-btn">😀</button>
+                            </div>
+                        </div>
+                        <button class="send-btn" id="send-btn">➤</button>
                     </div>
                 </div>
             </div>
 
             <!-- Боковая панель участников -->
             <div class="members-sidebar" id="members-sidebar">
-                <div class="members-header">УЧАСТНИКИ</div>
+                <div class="members-header">
+                    <span>УЧАСТНИКИ</span>
+                    <span class="members-count" id="members-count">—</span>
+                </div>
                 <div class="members-list" id="members-list">
                     <!-- Участники будут здесь -->
                 </div>
@@ -132,46 +212,202 @@
     </div>
 
     <!-- Модальные окна -->
-    <div id="user-profile-modal" class="modal">
-        <div class="modal-content profile-modal">
-            <!-- Контент профиля -->
+
+    <!-- Модальное окно добавления друга -->
+    <div id="add-friend-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Добавить друга</h3>
+            <p>Введите имя пользователя и тег</p>
+            <div class="username-input-wrapper">
+                <input type="text" id="friend-username-input" placeholder="Имя пользователя">
+                <span class="discriminator">#</span>
+                <input type="text" id="friend-discriminator-input" placeholder="0000" maxlength="4">
+            </div>
+            <button id="send-friend-request-btn">Отправить запрос на дружбу</button>
         </div>
     </div>
 
+    <!-- Модальное окно запросов в друзья -->
+    <div id="friend-requests-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Запросы на дружбу</h3>
+            <div id="friend-requests-list">
+                <!-- Запросы будут здесь -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания сервера -->
     <div id="server-create-modal" class="modal">
         <div class="modal-content">
-            <h3>Создать сервер</h3>
-            <input type="text" id="server-name-input" placeholder="Название сервера">
+            <span class="close">&times;</span>
+            <h3>Создать свой сервер</h3>
+            <p>Дайте вашему серверу индивидуальность с помощью названия и иконки</p>
+            <div class="server-create-form">
+                <div class="server-icon-upload">
+                    <div class="server-icon-preview" id="server-icon-preview">
+                        <span>Иконка сервера</span>
+                    </div>
+                    <input type="file" id="server-icon-upload" accept="image/*" class="hidden">
+                    <label for="server-icon-upload" class="upload-label">Загрузить</label>
+                </div>
+                <div class="server-name-input">
+                    <label for="server-name-input">Название сервера</label>
+                    <input type="text" id="server-name-input" placeholder="Введите название сервера">
+                </div>
+            </div>
             <button id="create-server-btn">Создать</button>
         </div>
     </div>
 
-    <div id="settings-modal" class="modal">
+    <!-- Модальное окно приглашения -->
+    <div id="invite-modal" class="modal">
         <div class="modal-content">
-            <h3>Настройки</h3>
+            <span class="close">&times;</span>
+            <h3>Пригласить друзей</h3>
+            <div class="invite-link">
+                <input type="text" id="invite-link-input" readonly>
+                <button id="copy-invite-btn">Копировать</button>
+            </div>
+            <div class="invite-options">
+                <label>
+                    <input type="checkbox" id="invite-expires"> Срок действия 7 дней
+                </label>
+                <label>
+                    <input type="checkbox" id="invite-max-uses"> Максимум 100 использований
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content settings-modal">
+            <span class="close">&times;</span>
+            <h3>Настройки пользователя</h3>
             <div class="settings-tabs">
-                <button class="settings-tab active" data-tab="profile">Профиль</button>
+                <button class="settings-tab active" data-tab="profile">Мой профиль</button>
+                <button class="settings-tab" data-tab="privacy">Конфиденциальность</button>
                 <button class="settings-tab" data-tab="appearance">Внешний вид</button>
+                <button class="settings-tab" data-tab="voice">Голос и видео</button>
             </div>
             
             <div class="settings-content">
+                <!-- Вкладка профиля -->
                 <div class="tab-content active" id="profile-tab">
-                    <div class="avatar-upload">
-                        <img id="settings-avatar" src="" alt="Avatar">
-                        <input type="file" id="avatar-upload" accept="image/*">
-                        <label for="avatar-upload">Изменить аватар</label>
+                    <div class="profile-header">
+                        <div class="profile-banner-upload">
+                            <div class="banner-preview" id="banner-preview">
+                                <div class="banner-overlay">
+                                    <button class="change-banner-btn">Изменить баннер</button>
+                                </div>
+                            </div>
+                            <input type="file" id="banner-upload" accept="image/*" class="hidden">
+                        </div>
+                        <div class="profile-avatar-section">
+                            <div class="avatar-upload">
+                                <div class="avatar-preview" id="avatar-preview">
+                                    <div class="user-avatar-large">U</div>
+                                </div>
+                                <input type="file" id="avatar-upload" accept="image/*" class="hidden">
+                                <label for="avatar-upload" class="change-avatar-btn">Изменить аватар</label>
+                            </div>
+                            <div class="profile-info">
+                                <input type="text" id="settings-username" placeholder="Имя пользователя" class="profile-input">
+                                <div class="discriminator-input">
+                                    <span>#</span>
+                                    <input type="text" id="settings-discriminator" placeholder="0000" maxlength="4" class="profile-input">
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <input type="text" id="settings-username" placeholder="Имя пользователя">
-                    <button id="save-profile-btn">Сохранить</button>
+                    <div class="profile-badges">
+                        <h4>Мои значки</h4>
+                        <div class="badges-list" id="user-badges">
+                            <!-- Бейджи будут здесь -->
+                        </div>
+                    </div>
+                    <div class="profile-bio">
+                        <label for="user-bio">О себе</label>
+                        <textarea id="user-bio" placeholder="Расскажите о себе..." maxlength="190"></textarea>
+                        <span class="bio-counter"><span id="bio-length">0</span>/190</span>
+                    </div>
+                    <button id="save-profile-btn" class="save-btn">Сохранить изменения</button>
                 </div>
                 
+                <!-- Вкладка внешнего вида -->
                 <div class="tab-content" id="appearance-tab">
                     <h4>Тема оформления</h4>
                     <div class="theme-options">
-                        <button class="theme-btn" data-theme="light">Белая</button>
-                        <button class="theme-btn" data-theme="dark">Черная</button>
-                        <button class="theme-btn active" data-theme="gray">Серая</button>
+                        <div class="theme-option">
+                            <button class="theme-btn active" data-theme="dark">
+                                <div class="theme-preview dark-theme"></div>
+                                <span>Тёмная</span>
+                            </button>
+                        </div>
+                        <div class="theme-option">
+                            <button class="theme-btn" data-theme="light">
+                                <div class="theme-preview light-theme"></div>
+                                <span>Светлая</span>
+                            </button>
+                        </div>
+                        <div class="theme-option">
+                            <button class="theme-btn" data-theme="gray">
+                                <div class="theme-preview gray-theme"></div>
+                                <span>Серая</span>
+                            </button>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Вкладка голоса и видео -->
+                <div class="tab-content" id="voice-tab">
+                    <h4>Настройки голосовой связи</h4>
+                    <div class="voice-settings">
+                        <div class="setting-group">
+                            <label>Устройство ввода</label>
+                            <select id="input-device">
+                                <option>Микрофон по умолчанию</option>
+                            </select>
+                        </div>
+                        <div class="setting-group">
+                            <label>Устройство вывода</label>
+                            <select id="output-device">
+                                <option>Динамики по умолчанию</option>
+                            </select>
+                        </div>
+                        <div class="setting-group">
+                            <label>Громкость микрофона</label>
+                            <input type="range" id="mic-volume" min="0" max="100" value="100">
+                        </div>
+                        <div class="setting-group">
+                            <label>Громкость наушников</label>
+                            <input type="range" id="headphone-volume" min="0" max="100" value="100">
+                        </div>
+                    </div>
+                    <button id="test-voice-btn" class="test-btn">Проверить микрофон</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно звонка -->
+    <div id="call-modal" class="modal">
+        <div class="modal-content call-modal">
+            <span class="close">&times;</span>
+            <div class="call-container">
+                <div class="call-avatar">
+                    <div class="user-avatar-xlarge" id="call-avatar">U</div>
+                </div>
+                <div class="call-info">
+                    <h3 id="call-username">Имя пользователя</h3>
+                    <p id="call-status">Звонок...</p>
+                </div>
+                <div class="call-controls">
+                    <button class="call-control-btn decline" id="end-call-btn">📞</button>
+                    <button class="call-control-btn accept" id="accept-call-btn">✅</button>
                 </div>
             </div>
         </div>
